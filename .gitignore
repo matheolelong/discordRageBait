@@ -1,0 +1,12 @@
+# Config avec IDs Discord
+config.txt
+
+# Build output
+target/
+
+# IDE
+.idea/
+*.iml
+
+# Maven
+.mvn/.mvn/

@@ -43,25 +43,31 @@ public class Main {
             // Initialiser le GhostPingManager
             GhostPingManager ghostPing = GhostPingManager.getInstance();
             ghostPing.setJda(jda);
+            
+            // Charger la configuration sauvegardée
+            ConfigManager.loadConfig(ghostPing);
 
-            // Enregistrer les commandes slash
-            jda.updateCommands().addCommands(
-                    Commands.slash("ping", "Répond avec Pong!"),
-                    Commands.slash("ragebait", "Envoie un message provocateur")
-                            .addOption(OptionType.STRING, "message", "Le message à envoyer", false),
-                    Commands.slash("info", "Affiche les informations du bot"),
-                    // Commandes Ghost Ping
-                    Commands.slash("ghostping", "Gère le ghost ping automatique")
-                            .addOption(OptionType.STRING, "action", "start/stop/status", true),
-                    Commands.slash("settarget", "Définit la cible du ghost ping")
-                            .addOption(OptionType.USER, "user", "L'utilisateur à ping", true),
-                    Commands.slash("addchannel", "Ajoute un salon pour le ghost ping")
-                            .addOption(OptionType.CHANNEL, "channel", "Le salon à ajouter", true),
-                    Commands.slash("removechannel", "Retire un salon du ghost ping")
-                            .addOption(OptionType.CHANNEL, "channel", "Le salon à retirer", true),
-                    Commands.slash("setinterval", "Change l'intervalle entre les ghost pings")
-                            .addOption(OptionType.INTEGER, "minutes", "Intervalle en minutes", true)
-            ).queue();
+            // Enregistrer les commandes slash pour chaque serveur (mise à jour instantanée)
+            for (var guild : jda.getGuilds()) {
+                guild.updateCommands().addCommands(
+                        Commands.slash("ping", "Répond avec Pong!"),
+                        Commands.slash("ragebait", "Envoie un message provocateur")
+                                .addOption(OptionType.STRING, "message", "Le message à envoyer", false),
+                        Commands.slash("info", "Affiche les informations du bot"),
+                        // Commandes Ghost Ping
+                        Commands.slash("ghostping", "Gère le ghost ping automatique")
+                                .addOption(OptionType.STRING, "action", "start/stop/status", true),
+                        Commands.slash("settarget", "Définit la cible du ghost ping")
+                                .addOption(OptionType.USER, "user", "L'utilisateur à ping", true),
+                        Commands.slash("addchannel", "Ajoute un salon pour le ghost ping")
+                                .addOption(OptionType.CHANNEL, "channel", "Le salon à ajouter", true),
+                        Commands.slash("removechannel", "Retire un salon du ghost ping")
+                                .addOption(OptionType.CHANNEL, "channel", "Le salon à retirer", true),
+                        Commands.slash("setinterval", "Change l'intervalle entre les ghost pings")
+                                .addOption(OptionType.INTEGER, "minutes", "Intervalle en minutes", true)
+                                .addOption(OptionType.INTEGER, "secondes", "Secondes supplémentaires", false)
+                ).queue();
+            }
 
             System.out.println("Bot connecté en tant que: " + jda.getSelfUser().getName());
             System.out.println("Le bot est prêt!");

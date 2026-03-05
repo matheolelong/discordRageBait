@@ -1,5 +1,6 @@
 package com.ragebait.listeners;
 
+import com.ragebait.ConfigManager;
 import com.ragebait.GhostPingManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
@@ -78,10 +79,10 @@ public class SlashCommandListener extends ListenerAdapter {
                         `/settarget @user` - Définit la cible
                         `/addchannel #salon` - Ajoute un salon
                         `/removechannel #salon` - Retire un salon
-                        `/setinterval <min>` - Change l'intervalle
+                        `/setinterval <sec>` - Change l'intervalle
                         """, false)
                 .addField("Statut", gp.isRunning() ? "🟢 Actif" : "🔴 Inactif", true)
-                .addField("Intervalle", gp.getInterval() + " min", true)
+                .addField("Intervalle", gp.getInterval() + "s", true)
                 .addField("Salons", String.valueOf(gp.getChannelIds().size()), true)
                 .setFooter("Made with JDA ❤️");
 
@@ -99,7 +100,7 @@ public class SlashCommandListener extends ListenerAdapter {
                     return;
                 }
                 gp.start();
-                event.reply("👻 Ghost ping démarré! Intervalle: " + gp.getInterval() + " minutes").setEphemeral(true).queue();
+                event.reply("👻 Ghost ping démarré! Intervalle: " + gp.getInterval() + " secondes").setEphemeral(true).queue();
             }
             case "stop" -> {
                 gp.stop();
@@ -108,7 +109,7 @@ public class SlashCommandListener extends ListenerAdapter {
             case "status" -> {
                 StringBuilder sb = new StringBuilder();
                 sb.append("**Statut:** ").append(gp.isRunning() ? "🟢 Actif" : "🔴 Inactif").append("\n");
-                sb.append("**Intervalle:** ").append(gp.getInterval()).append(" minutes\n");
+                sb.append("**Intervalle:** ").append(gp.getInterval()).append(" secondes\n");
                 sb.append("**Cible:** ");
                 if (gp.getTargetUserId() != null) {
                     sb.append("<@").append(gp.getTargetUserId()).append(">\n");
@@ -130,14 +131,18 @@ public class SlashCommandListener extends ListenerAdapter {
 
     private void handleSetTarget(SlashCommandInteractionEvent event) {
         User target = event.getOption("user").getAsUser();
-        GhostPingManager.getInstance().setTargetUser(target.getIdLong());
+        GhostPingManager gp = GhostPingManager.getInstance();
+        gp.setTargetUser(target.getIdLong());
+        ConfigManager.saveConfig(gp);
         event.reply("🎯 Cible définie: " + target.getAsMention()).setEphemeral(true).queue();
     }
 
     private void handleAddChannel(SlashCommandInteractionEvent event) {
         var channel = event.getOption("channel").getAsChannel();
         if (channel instanceof TextChannel) {
-            GhostPingManager.getInstance().addChannel(channel.getIdLong());
+            GhostPingManager gp = GhostPingManager.getInstance();
+            gp.addChannel(channel.getIdLong());
+            ConfigManager.saveConfig(gp);
             event.reply("✅ Salon ajouté: <#" + channel.getIdLong() + ">").setEphemeral(true).queue();
         } else {
             event.reply("❌ Ce n'est pas un salon textuel!").setEphemeral(true).queue();
@@ -146,17 +151,31 @@ public class SlashCommandListener extends ListenerAdapter {
 
     private void handleRemoveChannel(SlashCommandInteractionEvent event) {
         var channel = event.getOption("channel").getAsChannel();
-        GhostPingManager.getInstance().removeChannel(channel.getIdLong());
+        GhostPingManager gp = GhostPingManager.getInstance();
+        gp.removeChannel(channel.getIdLong());
+        ConfigManager.saveConfig(gp);
         event.reply("✅ Salon retiré: <#" + channel.getIdLong() + ">").setEphemeral(true).queue();
     }
 
     private void handleSetInterval(SlashCommandInteractionEvent event) {
         int minutes = event.getOption("minutes").getAsInt();
-        if (minutes < 1) {
-            event.reply("❌ L'intervalle doit être d'au moins 1 minute!").setEphemeral(true).queue();
+        int seconds = event.getOption("secondes") != null ? event.getOption("secondes").getAsInt() : 0;
+        
+        int totalSeconds = (minutes * 60) + seconds;
+        
+        if (totalSeconds < 1) {
+            event.reply("❌ L'intervalle doit être d'au moins 1 seconde!").setEphemeral(true).queue();
             return;
         }
-        GhostPingManager.getInstance().setInterval(minutes);
-        event.reply("⏱️ Intervalle défini à " + minutes + " minute(s)").setEphemeral(true).queue();
+        GhostPingManager gp = GhostPingManager.getInstance();
+        gp.setInterval(totalSeconds);
+        ConfigManager.saveConfig(gp);
+        
+        String display = "";
+        if (minutes > 0) display += minutes + " min ";
+        if (seconds > 0) display += seconds + "s";
+        if (display.isEmpty()) display = totalSeconds + "s";
+        
+        event.reply("⏱️ Intervalle défini à " + display.trim()).setEphemeral(true).queue();
     }
 }

@@ -1,3 +1,5 @@
 com\ragebait\listeners\MessageListener.class
+com\ragebait\GhostPingManager.class
 com\ragebait\Main.class
+com\ragebait\ConfigManager.class
 com\ragebait\listeners\SlashCommandListener.class

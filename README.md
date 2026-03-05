@@ -29,7 +29,7 @@ Un bot Discord en Java utilisant JDA (Java Discord API) pour envoyer des ghost m
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Java\jdk-25.0.2"
 $env:DISCORD_TOKEN = "ton_token_ici"
-.\mvnw.cmd compile exec:java "-Dexec.mainClass=com.ragebait.Main"
+.\mvnw.cmd clean compile exec:java "-Dexec.mainClass=com.ragebait.Main"
 ```
 
 ## Commandes disponibles
@@ -42,7 +42,7 @@ $env:DISCORD_TOKEN = "ton_token_ici"
 | `/ghostping status` | Affiche le statut actuel |
 | `/addchannel #salon` | Ajoute un salon pour les ghost messages |
 | `/removechannel #salon` | Retire un salon |
-| `/setinterval <minutes>` | Change l'intervalle (défaut: 5 min) |
+| `/setinterval <min> [sec]` | Change l'intervalle (ex: `/setinterval 0 30` = 30s) |
 | `/settarget @user` | Définit un utilisateur à mentionner (optionnel) |
 
 ### Autres
@@ -53,7 +53,11 @@ $env:DISCORD_TOKEN = "ton_token_ici"
 
 ## Fonctionnement
 
-Le bot envoie un message "." dans les salons configurés, puis le supprime après 1 seconde. Cela crée une notification fantôme - ton pote verra qu'il y a un nouveau message mais ne trouvera rien!
+Le bot envoie un message (ou un ping si une cible est définie) dans un salon aléatoire parmi ceux configurés, puis le supprime après 1 seconde. Cela crée une notification fantôme!
+
+## Sauvegarde automatique
+
+La configuration (salons, cible, intervalle) est automatiquement sauvegardée dans `config.txt` et rechargée au redémarrage du bot.
 
 ## Structure du projet
 
@@ -61,6 +65,7 @@ Le bot envoie un message "." dans les salons configurés, puis le supprime aprè
 src/main/java/com/ragebait/
 ├── Main.java                    # Point d'entrée du bot
 ├── GhostPingManager.java        # Gère les ghost pings automatiques
+├── ConfigManager.java           # Sauvegarde/chargement de la config
 └── listeners/
     ├── MessageListener.java     # Gère les messages textuels
     └── SlashCommandListener.java # Gère les commandes slash

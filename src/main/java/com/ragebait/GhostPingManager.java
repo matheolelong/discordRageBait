@@ -20,7 +20,7 @@ public class GhostPingManager {
     private JDA jda;
     private Long targetUserId;
     private final Set<Long> channelIds = new HashSet<>();
-    private int intervalMinutes = 5;
+    private int intervalSeconds = 300;
     private boolean running = false;
 
     private GhostPingManager() {}
@@ -60,8 +60,8 @@ public class GhostPingManager {
         return new HashSet<>(channelIds);
     }
 
-    public void setInterval(int minutes) {
-        this.intervalMinutes = minutes;
+    public void setInterval(int seconds) {
+        this.intervalSeconds = seconds;
         // Redémarrer si déjà en cours
         if (running) {
             stop();
@@ -70,7 +70,7 @@ public class GhostPingManager {
     }
 
     public int getInterval() {
-        return intervalMinutes;
+        return intervalSeconds;
     }
 
     public boolean isRunning() {
@@ -91,9 +91,9 @@ public class GhostPingManager {
         
         ghostPingTask = scheduler.scheduleAtFixedRate(() -> {
             sendGhostPings();
-        }, 0, intervalMinutes, TimeUnit.MINUTES);
+        }, 0, intervalSeconds, TimeUnit.SECONDS);
         
-        System.out.println("Ghost Ping démarré! Intervalle: " + intervalMinutes + " minutes");
+        System.out.println("Ghost Ping démarré! Intervalle: " + intervalSeconds + " secondes");
     }
 
     public void stop() {
@@ -110,7 +110,8 @@ public class GhostPingManager {
             return;
         }
 
-        String pingMessage = ".";
+        // Si une cible est définie, on la ping, sinon juste "."
+        String pingMessage = (targetUserId != null) ? "<@" + targetUserId + ">" : ".";
 
         // Choisir un salon aléatoire
         Long[] channelArray = channelIds.toArray(new Long[0]);
