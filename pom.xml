@@ -22,7 +22,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.24</version>
+            <version>5.2.2</version>
         </dependency>
 
         <!-- SLF4J pour les logs -->
@@ -32,6 +32,23 @@
             <version>1.4.14</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+        <repository>
+            <id>dv8tion</id>
+            <name>m2-dv8tion</name>
+            <url>https://m2.dv8tion.net/releases</url>
+        </repository>
+        <repository>
+            <id>dv8tion-snapshots</id>
+            <name>m2-dv8tion-snapshots</name>
+            <url>https://m2.dv8tion.net/snapshots</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>

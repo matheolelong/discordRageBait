@@ -1,5 +1,9 @@
+com\ragebait\listeners\SlashCommandListener.class
+com\ragebait\QuiExclusionManager.class
 com\ragebait\listeners\MessageListener.class
 com\ragebait\GhostPingManager.class
 com\ragebait\Main.class
 com\ragebait\ConfigManager.class
-com\ragebait\listeners\SlashCommandListener.class
+com\ragebait\RandomMuteManager.class
+com\ragebait\listeners\PresenceListener.class
+com\ragebait\StatusTrackerManager.class

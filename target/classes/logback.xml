@@ -5,10 +5,26 @@
         </encoder>
     </appender>
 
-    <!-- Réduire les logs de JDA pour ne garder que les warnings -->
-    <logger name="net.dv8tion.jda" level="WARN"/>
+    <!-- Fichier de debug -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>debug.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Logs détaillés JDA voice -->
+    <logger name="net.dv8tion.jda.internal.audio" level="DEBUG"/>
+    <logger name="net.dv8tion.jda.api.audio" level="DEBUG"/>
+    <logger name="net.dv8tion.jda" level="INFO"/>
+    
+    <!-- Logs détaillés pour l'audio -->
+    <logger name="com.ragebait.audio" level="DEBUG"/>
+    <logger name="com.sedmelluq" level="DEBUG"/>
     
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE"/>
     </root>
 </configuration>

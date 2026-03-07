@@ -1,9 +1,15 @@
 package com.ragebait.listeners;
 
+import com.ragebait.QuiExclusionManager;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+import java.util.regex.Pattern;
+
 public class MessageListener extends ListenerAdapter {
+
+    // Pattern pour détecter "qui" comme mot isolé (pas dans "quiche", "équipe", etc.)
+    private static final Pattern QUI_PATTERN = Pattern.compile("\\bqui\\b", Pattern.CASE_INSENSITIVE);
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -12,15 +18,24 @@ public class MessageListener extends ListenerAdapter {
             return;
         }
 
-        String message = event.getMessage().getContentRaw().toLowerCase();
+        String message = event.getMessage().getContentRaw();
+        String messageLower = message.toLowerCase();
+
+        // Répondre "Qui t'a demandé" quand quelqu'un dit "qui" (sauf exclus)
+        if (QUI_PATTERN.matcher(message).find()) {
+            if (!QuiExclusionManager.getInstance().isExcluded(event.getAuthor().getIdLong())) {
+                event.getChannel().sendMessage("Qui t'a demandé").queue();
+            }
+            return;
+        }
 
         // Exemple: répondre à certains mots-clés
-        if (message.contains("bonjour") || message.contains("salut")) {
+        if (messageLower.contains("bonjour") || messageLower.contains("salut")) {
             event.getChannel().sendMessage("Salut " + event.getAuthor().getAsMention() + "! 👋").queue();
         }
 
         // Commande préfixe simple (alternative aux slash commands)
-        if (message.startsWith("!rage")) {
+        if (messageLower.startsWith("!rage")) {
             String[] rageBaitMessages = {
                     "Je pense que les pizzas à l'ananas sont les meilleures 🍕🍍",
                     "Star Wars épisode 8 est le meilleur de la saga 🎬",
