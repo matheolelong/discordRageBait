@@ -79,6 +79,10 @@ public class Main {
             CasinoManager casino = CasinoManager.getInstance();
             casino.loadData();
             
+            // Initialiser le RouletteManager
+            RouletteManager roulette = RouletteManager.getInstance();
+            roulette.setJda(jda);
+            
             // Charger la configuration sauvegardée
             ConfigManager.loadConfig(ghostPing);
 
@@ -126,7 +130,16 @@ public class Main {
                         Commands.slash("give", "Donne des 🪙 à quelqu'un")
                                 .addOption(OptionType.USER, "user", "Destinataire", true)
                                 .addOption(OptionType.INTEGER, "montant", "Montant à donner", true),
-                        Commands.slash("leaderboard", "Classement des plus riches")
+                        Commands.slash("leaderboard", "Classement des plus riches"),
+                        // Roulette
+                        Commands.slash("roulette", "Gère la roulette")
+                                .addOption(OptionType.STRING, "action", "start/stop/status/delay", true)
+                                .addOption(OptionType.CHANNEL, "channel", "Salon pour la roulette (pour start)", false)
+                                .addOption(OptionType.INTEGER, "secondes", "Délai entre les tours (pour delay)", false),
+                        Commands.slash("bet", "Place un pari à la roulette")
+                                .addOption(OptionType.INTEGER, "montant", "Montant à miser", true)
+                                .addOption(OptionType.STRING, "type", "Type de pari (rouge/noir/pair/impair/0-36...)", true),
+                        Commands.slash("mybets", "Voir tes paris en cours à la roulette")
                 ).queue();
             }
 
@@ -137,6 +150,7 @@ public class Main {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 randomMute.shutdown();
                 ghostPing.shutdown();
+                roulette.shutdown();
                 jda.shutdown();
             }));
 

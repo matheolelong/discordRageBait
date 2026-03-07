@@ -14,7 +14,7 @@ public class RandomMuteManager {
 
     private static RandomMuteManager instance;
     
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+    private ScheduledExecutorService scheduler;
     private final Random random = new Random();
     
     private ScheduledFuture<?> muteTask;
@@ -23,10 +23,18 @@ public class RandomMuteManager {
     private Long targetUserId;
     private Long guildId;
     private int maxDelaySeconds = 30;
-    private int muteDurationMs = 500; // Durée du mute en ms
+    private int muteDurationMs = 500;
     private boolean running = false;
 
-    private RandomMuteManager() {}
+    private RandomMuteManager() {
+        initScheduler();
+    }
+    
+    private void initScheduler() {
+        if (scheduler == null || scheduler.isShutdown()) {
+            scheduler = Executors.newScheduledThreadPool(2);
+        }
+    }
 
     public static RandomMuteManager getInstance() {
         if (instance == null) {
@@ -69,8 +77,9 @@ public class RandomMuteManager {
     }
 
     public void start() {
+        // Arrêter si déjà en cours
         if (running) {
-            return;
+            stop();
         }
         
         if (targetUserId == null || guildId == null) {
@@ -78,17 +87,18 @@ public class RandomMuteManager {
             return;
         }
 
+        initScheduler();
         running = true;
         scheduleNextMute();
         System.out.println("Random Mute démarré! Cible: " + targetUserId + ", Délai max: " + maxDelaySeconds + "s");
     }
 
     public void stop() {
+        running = false;
         if (muteTask != null) {
-            muteTask.cancel(false);
+            muteTask.cancel(true);
             muteTask = null;
         }
-        running = false;
         System.out.println("Random Mute arrêté!");
     }
 
@@ -97,14 +107,30 @@ public class RandomMuteManager {
             return;
         }
 
-        // Délai aléatoire entre 1 et maxDelaySeconds
+        initScheduler();
+        
         int delay = 1 + random.nextInt(Math.max(1, maxDelaySeconds));
         
-        muteTask = scheduler.schedule(() -> {
-            performRandomMute();
-        }, delay, TimeUnit.SECONDS);
-        
-        System.out.println("Prochain mute dans " + delay + " secondes");
+        try {
+            muteTask = scheduler.schedule(() -> {
+                try {
+                    performRandomMute();
+                } catch (Exception e) {
+                    System.err.println("Erreur dans performRandomMute: " + e.getMessage());
+                    if (running) {
+                        scheduleNextMute();
+                    }
+                }
+            }, delay, TimeUnit.SECONDS);
+            
+            System.out.println("Prochain mute dans " + delay + " secondes");
+        } catch (Exception e) {
+            System.err.println("Erreur scheduling: " + e.getMessage());
+            initScheduler();
+            if (running) {
+                scheduleNextMute();
+            }
+        }
     }
 
     private void performRandomMute() {
@@ -114,41 +140,39 @@ public class RandomMuteManager {
 
         Guild guild = jda.getGuildById(guildId);
         if (guild == null) {
-            scheduleNextMute();
+            if (running) scheduleNextMute();
             return;
         }
 
         Member member = guild.getMemberById(targetUserId);
         if (member == null || member.getVoiceState() == null || !member.getVoiceState().inAudioChannel()) {
-            // L'utilisateur n'est pas en vocal, on replanifie
-            scheduleNextMute();
+            if (running) scheduleNextMute();
             return;
         }
 
-        // Choix aléatoire : mute vocal (0) ou mute casque/deafen (1)
         boolean deafen = random.nextBoolean();
         
         try {
             if (deafen) {
-                // Mute casque (deafen)
                 guild.deafen(member, true).queue(
                     success -> {
                         System.out.println("Deafen appliqué à " + member.getEffectiveName());
-                        // Unmute après la durée
                         scheduler.schedule(() -> {
-                            guild.deafen(member, false).queue();
+                            try {
+                                guild.deafen(member, false).queue();
+                            } catch (Exception ignored) {}
                         }, muteDurationMs, TimeUnit.MILLISECONDS);
                     },
                     error -> System.out.println("Erreur deafen: " + error.getMessage())
                 );
             } else {
-                // Mute vocal
                 guild.mute(member, true).queue(
                     success -> {
                         System.out.println("Mute appliqué à " + member.getEffectiveName());
-                        // Unmute après la durée
                         scheduler.schedule(() -> {
-                            guild.mute(member, false).queue();
+                            try {
+                                guild.mute(member, false).queue();
+                            } catch (Exception ignored) {}
                         }, muteDurationMs, TimeUnit.MILLISECONDS);
                     },
                     error -> System.out.println("Erreur mute: " + error.getMessage())
@@ -158,12 +182,15 @@ public class RandomMuteManager {
             System.out.println("Erreur lors du mute: " + e.getMessage());
         }
 
-        // Planifier le prochain mute
-        scheduleNextMute();
+        if (running) {
+            scheduleNextMute();
+        }
     }
 
     public void shutdown() {
         stop();
-        scheduler.shutdown();
+        if (scheduler != null && !scheduler.isShutdown()) {
+            scheduler.shutdown();
+        }
     }
 }

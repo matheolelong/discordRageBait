@@ -5,6 +5,7 @@ import com.ragebait.ConfigManager;
 import com.ragebait.GhostPingManager;
 import com.ragebait.QuiExclusionManager;
 import com.ragebait.RandomMuteManager;
+import com.ragebait.RouletteManager;
 import com.ragebait.StatusTrackerManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
@@ -60,6 +61,10 @@ public class SlashCommandListener extends ListenerAdapter {
             case "blackjack" -> handleBlackjack(event);
             case "give" -> handleGive(event);
             case "leaderboard" -> handleLeaderboard(event);
+            // Roulette
+            case "roulette" -> handleRoulette(event);
+            case "bet" -> handleBet(event);
+            case "mybets" -> handleMyBets(event);
             default -> event.reply("Commande inconnue!").setEphemeral(true).queue();
         }
     }
@@ -919,10 +924,109 @@ public class SlashCommandListener extends ListenerAdapter {
                 case 3 -> "🥉";
                 default -> "**" + rank + ".**";
             };
-            sb.append(medal).append(" <@").append(entry.getKey()).append("> - **").append(entry.getValue()).append("** 🪙\n");
+            
+            // Récupérer le nom sans ping
+            String userName = "Utilisateur inconnu";
+            User user = event.getJDA().getUserById(entry.getKey());
+            if (user != null) {
+                userName = user.getEffectiveName();
+            } else {
+                // Essayer de récupérer depuis le cache du serveur
+                var member = event.getGuild().getMemberById(entry.getKey());
+                if (member != null) {
+                    userName = member.getEffectiveName();
+                }
+            }
+            
+            sb.append(medal).append(" ").append(userName).append(" - **").append(entry.getValue()).append("** 🪙\n");
             rank++;
         }
         
         event.reply(sb.toString()).queue();
+    }
+    
+    // ============ ROULETTE COMMANDS ============
+    
+    private void handleRoulette(SlashCommandInteractionEvent event) {
+        String action = event.getOption("action").getAsString().toLowerCase();
+        RouletteManager roulette = RouletteManager.getInstance();
+        
+        switch (action) {
+            case "start" -> {
+                var channelOption = event.getOption("channel");
+                TextChannel channel;
+                
+                if (channelOption != null) {
+                    channel = channelOption.getAsChannel().asTextChannel();
+                } else {
+                    channel = event.getChannel().asTextChannel();
+                }
+                
+                roulette.setJda(event.getJDA());
+                roulette.setChannel(channel.getIdLong());
+                roulette.start();
+                
+                event.reply("🎰 Roulette démarrée dans " + channel.getAsMention() + "!\n" +
+                           "Délai: **" + roulette.getDelay() + " secondes** entre chaque tour").setEphemeral(true).queue();
+            }
+            case "stop" -> {
+                roulette.stop();
+                event.reply("🛑 Roulette arrêtée!").setEphemeral(true).queue();
+            }
+            case "status" -> {
+                StringBuilder sb = new StringBuilder();
+                sb.append("**🎰 Statut Roulette**\n\n");
+                sb.append("**État:** ").append(roulette.isRunning() ? "🟢 Active" : "🔴 Inactive").append("\n");
+                sb.append("**Délai:** ").append(roulette.getDelay()).append(" secondes\n");
+                if (roulette.getChannelId() != null) {
+                    sb.append("**Salon:** <#").append(roulette.getChannelId()).append(">");
+                }
+                event.reply(sb.toString()).setEphemeral(true).queue();
+            }
+            case "delay" -> {
+                var delayOption = event.getOption("secondes");
+                if (delayOption == null) {
+                    event.reply("❌ Spécifie un délai! `/roulette delay secondes:30`").setEphemeral(true).queue();
+                    return;
+                }
+                
+                int delay = delayOption.getAsInt();
+                if (delay < 10) {
+                    event.reply("❌ Le délai minimum est de 10 secondes!").setEphemeral(true).queue();
+                    return;
+                }
+                
+                roulette.setDelay(delay);
+                event.reply("✅ Délai changé à **" + delay + " secondes**").setEphemeral(true).queue();
+            }
+            default -> event.reply("❌ Action invalide! Utilise: start, stop, status, delay").setEphemeral(true).queue();
+        }
+    }
+    
+    private void handleBet(SlashCommandInteractionEvent event) {
+        RouletteManager roulette = RouletteManager.getInstance();
+        
+        if (!roulette.isRunning()) {
+            event.reply("❌ La roulette n'est pas active! Demande à un admin de la démarrer avec `/roulette start`").setEphemeral(true).queue();
+            return;
+        }
+        
+        long amount = event.getOption("montant").getAsLong();
+        String betType = event.getOption("type").getAsString();
+        
+        String result = roulette.placeBet(event.getUser().getIdLong(), betType, amount);
+        event.reply(result).setEphemeral(true).queue();
+    }
+    
+    private void handleMyBets(SlashCommandInteractionEvent event) {
+        RouletteManager roulette = RouletteManager.getInstance();
+        
+        if (!roulette.isRunning()) {
+            event.reply("❌ La roulette n'est pas active!").setEphemeral(true).queue();
+            return;
+        }
+        
+        String bets = roulette.getCurrentBets(event.getUser().getIdLong());
+        event.reply(bets).setEphemeral(true).queue();
     }
 }

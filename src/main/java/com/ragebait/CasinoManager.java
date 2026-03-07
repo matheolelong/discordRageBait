@@ -209,6 +209,7 @@ public class CasinoManager {
         private final Random random;
         private boolean playerStand = false;
         private boolean gameOver = false;
+        private boolean naturalBlackjack = false;
         private String result = "";
         private long winnings = 0;
         
@@ -223,9 +224,10 @@ public class CasinoManager {
             playerCards.add(drawCard());
             dealerCards.add(drawCard());
             
-            // Check blackjack naturel
+            // Check blackjack naturel (21 avec 2 cartes = bonus 150%)
             if (calculateHand(playerCards) == 21) {
-                stand(); // Auto-stand on blackjack
+                naturalBlackjack = true;
+                stand();
             }
         }
         
@@ -285,17 +287,33 @@ public class CasinoManager {
             gameOver = true;
             
             if (dealerTotal > 21) {
-                result = "🎉 **Le dealer bust!** Tu gagnes!";
-                winnings = bet * 2;
+                if (naturalBlackjack) {
+                    result = "🎉 **BLACKJACK NATUREL!** 21 au premier tirage!";
+                    winnings = (long) (bet * 2.5); // 150% de gains
+                } else {
+                    result = "🎉 **Le dealer bust!** Tu gagnes!";
+                    winnings = bet * 2;
+                }
             } else if (playerTotal > dealerTotal) {
-                result = "🎉 **Tu gagnes!** " + playerTotal + " vs " + dealerTotal;
-                winnings = bet * 2;
+                if (naturalBlackjack) {
+                    result = "🎉 **BLACKJACK NATUREL!** 21 au premier tirage!";
+                    winnings = (long) (bet * 2.5); // 150% de gains
+                } else {
+                    result = "🎉 **Tu gagnes!** " + playerTotal + " vs " + dealerTotal;
+                    winnings = bet * 2;
+                }
             } else if (dealerTotal > playerTotal) {
                 result = "💨 **Le dealer gagne!** " + dealerTotal + " vs " + playerTotal;
                 winnings = 0;
             } else {
-                result = "🤝 **Égalité!** Mise remboursée";
-                winnings = bet;
+                // Égalité - mais si blackjack naturel vs 21 normal du dealer, le joueur gagne
+                if (naturalBlackjack && dealerTotal == 21 && dealerCards.size() > 2) {
+                    result = "🎉 **BLACKJACK NATUREL!** Tu bats le 21 du dealer!";
+                    winnings = (long) (bet * 2.5);
+                } else {
+                    result = "🤝 **Égalité!** Mise remboursée";
+                    winnings = bet;
+                }
             }
         }
         
@@ -304,6 +322,7 @@ public class CasinoManager {
         public java.util.List<String> getPlayerCards() { return playerCards; }
         public java.util.List<String> getDealerCards() { return dealerCards; }
         public boolean isGameOver() { return gameOver; }
+        public boolean isNaturalBlackjack() { return naturalBlackjack; }
         public String getResult() { return result; }
         public long getWinnings() { return winnings; }
         
