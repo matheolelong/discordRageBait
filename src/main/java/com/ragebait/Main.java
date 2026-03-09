@@ -9,37 +9,23 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import java.io.*;
-import java.nio.file.*;
 
 public class Main {
 
     public static void main(String[] args) {
         // Récupère le token depuis les variables d'environnement ou les arguments
         String token = System.getenv("DISCORD_TOKEN");
-        
         if (token == null && args.length > 0) {
             token = args[0];
         }
-        
-        // Essayer de lire le token depuis config.txt
-        if (token == null) {
-            try {
-                for (String line : Files.readAllLines(Path.of("config.txt"))) {
-                    if (line.startsWith("token=")) {
-                        token = line.substring(6).trim();
-                        break;
-                    }
-                }
-            } catch (IOException ignored) {}
-        }
-        
         if (token == null) {
             System.err.println("Erreur: Token Discord non trouvé!");
-            System.err.println("Définissez la variable d'environnement DISCORD_TOKEN, passez le token en argument,");
-            System.err.println("ou ajoutez 'token=VOTRE_TOKEN' dans config.txt");
+            System.err.println("Définissez la variable d'environnement DISCORD_TOKEN ou passez le token en argument.");
             System.exit(1);
         }
+
+        // Initialiser la base de données PostgreSQL
+        DatabaseManager.getInstance();
 
         try {
             // Création du bot avec JDA
@@ -75,9 +61,8 @@ public class Main {
             StatusTrackerManager statusTracker = StatusTrackerManager.getInstance();
             statusTracker.setJda(jda);
             
-            // Initialiser le CasinoManager
-            CasinoManager casino = CasinoManager.getInstance();
-            casino.loadData();
+            // Initialiser le CasinoManager (données directement dans PostgreSQL)
+            CasinoManager.getInstance();
             
             // Initialiser le RouletteManager
             RouletteManager roulette = RouletteManager.getInstance();

@@ -8,17 +8,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.3.0</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <mainClass>com.ragebait.Main</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.5.1</version>
         <executions>
@@ -27,6 +16,13 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            <configuration>
+              <transformers>
+                <transformer>
+                  <mainClass>com.ragebait.Main</mainClass>
+                </transformer>
+              </transformers>
+            </configuration>
           </execution>
         </executions>
       </plugin>
@@ -46,10 +42,6 @@
       <id>dv8tion-snapshots</id>
       <name>m2-dv8tion-snapshots</name>
       <url>https://m2.dv8tion.net/snapshots</url>
-    </repository>
-    <repository>
-      <id>arbjerg</id>
-      <url>https://maven.lavalink.dev/releases</url>
     </repository>
   </repositories>
   <properties>
