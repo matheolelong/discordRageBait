@@ -3,8 +3,12 @@ package com.ragebait;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CasinoManager {
+
+    private static final Logger log = LoggerFactory.getLogger(CasinoManager.class);
 
     private static CasinoManager instance;
     private static final long DEFAULT_BALANCE = 1000;
@@ -47,7 +51,7 @@ public class CasinoManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[Casino] Erreur getBalance: " + e.getMessage());
+            log.error("[Casino] Erreur getBalance pour userId={}", userId, e);
         }
         // Utilisateur inconnu → créer avec solde par défaut
         setBalance(userId, DEFAULT_BALANCE);
@@ -67,7 +71,7 @@ public class CasinoManager {
             ps.setLong(2, value);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("[Casino] Erreur setBalance: " + e.getMessage());
+            log.error("[Casino] Erreur setBalance pour userId={}", userId, e);
         }
     }
 
@@ -107,7 +111,7 @@ public class CasinoManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[Casino] Erreur claimDaily (lecture): " + e.getMessage());
+            log.error("[Casino] Erreur claimDaily (lecture) pour userId={}", userId, e);
         }
 
         // Mettre à jour le timestamp et créditer
@@ -122,7 +126,7 @@ public class CasinoManager {
             ps.setLong(2, now);
             ps.executeUpdate();
         } catch (SQLException e) {
-            System.err.println("[Casino] Erreur claimDaily (upsert): " + e.getMessage());
+            log.error("[Casino] Erreur claimDaily (upsert) pour userId={}", userId, e);
         }
 
         addBalance(userId, DAILY_AMOUNT);
@@ -353,7 +357,7 @@ public class CasinoManager {
                 }
             }
         } catch (SQLException e) {
-            System.err.println("[Casino] Erreur getLeaderboard: " + e.getMessage());
+            log.error("[Casino] Erreur getLeaderboard", e);
         }
         return entries;
     }

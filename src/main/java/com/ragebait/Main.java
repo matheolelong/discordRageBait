@@ -9,8 +9,12 @@ import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
+
+    private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         // Récupère le token depuis les variables d'environnement ou les arguments
@@ -19,10 +23,11 @@ public class Main {
             token = args[0];
         }
         if (token == null) {
-            System.err.println("Erreur: Token Discord non trouvé!");
-            System.err.println("Définissez la variable d'environnement DISCORD_TOKEN ou passez le token en argument.");
+            log.error("Token Discord non trouvé! Définissez DISCORD_TOKEN ou passez-le en argument.");
             System.exit(1);
         }
+
+        log.info("=== Démarrage du bot RageBait ===");
 
         // Initialiser la base de données PostgreSQL
         DatabaseManager.getInstance();
@@ -31,12 +36,12 @@ public class Main {
             // Création du bot avec JDA
             JDA jda = JDABuilder.createDefault(token)
                     // Intents nécessaires pour lire les messages, le vocal et les présences
-                    .enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES, 
+                    .enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
                                    GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_PRESENCES,
                                    GatewayIntent.GUILD_MEMBERS)
                     // Cache tous les membres pour recevoir les événements de présence
                     .setMemberCachePolicy(net.dv8tion.jda.api.utils.MemberCachePolicy.ALL)
-                    .enableCache(net.dv8tion.jda.api.utils.cache.CacheFlag.ONLINE_STATUS, 
+                    .enableCache(net.dv8tion.jda.api.utils.cache.CacheFlag.ONLINE_STATUS,
                                  net.dv8tion.jda.api.utils.cache.CacheFlag.ACTIVITY)
                     // Statut affiché sur Discord
                     .setActivity(Activity.playing("Rage Bait 🎣"))
@@ -48,26 +53,27 @@ public class Main {
 
             // Attendre que le bot soit prêt
             jda.awaitReady();
+            log.info("Bot connecté en tant que: {}", jda.getSelfUser().getName());
 
             // Initialiser le GhostPingManager
             GhostPingManager ghostPing = GhostPingManager.getInstance();
             ghostPing.setJda(jda);
-            
+
             // Initialiser le RandomMuteManager
             RandomMuteManager randomMute = RandomMuteManager.getInstance();
             randomMute.setJda(jda);
-            
+
             // Initialiser le StatusTrackerManager
             StatusTrackerManager statusTracker = StatusTrackerManager.getInstance();
             statusTracker.setJda(jda);
-            
+
             // Initialiser le CasinoManager (données directement dans PostgreSQL)
             CasinoManager.getInstance();
-            
+
             // Initialiser le RouletteManager
             RouletteManager roulette = RouletteManager.getInstance();
             roulette.setJda(jda);
-            
+
             // Charger la configuration sauvegardée
             ConfigManager.loadConfig(ghostPing);
 
@@ -126,25 +132,26 @@ public class Main {
                                 .addOption(OptionType.STRING, "type", "Type de pari (rouge/noir/pair/impair/0-36...)", true),
                         Commands.slash("mybets", "Voir tes paris en cours à la roulette")
                 ).queue();
+                log.info("Commandes slash enregistrées pour le serveur: {}", guild.getName());
             }
 
-            System.out.println("Bot connecté en tant que: " + jda.getSelfUser().getName());
-            System.out.println("Le bot est prêt!");
+            log.info("Bot prêt!");
 
             // Arrêter proprement à la fermeture
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                log.info("Arrêt du bot en cours...");
                 randomMute.shutdown();
                 ghostPing.shutdown();
                 roulette.shutdown();
                 jda.shutdown();
+                log.info("Bot arrêté.");
             }));
 
             // Garder le bot en vie (bloque jusqu'à l'arrêt)
             jda.awaitShutdown();
 
         } catch (Exception e) {
-            System.err.println("Erreur lors du démarrage du bot: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Erreur lors du démarrage du bot", e);
         }
     }
 }

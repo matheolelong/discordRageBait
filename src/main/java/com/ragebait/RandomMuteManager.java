@@ -3,6 +3,8 @@ package com.ragebait;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Random;
 import java.util.concurrent.Executors;
@@ -12,13 +14,14 @@ import java.util.concurrent.TimeUnit;
 
 public class RandomMuteManager {
 
+    private static final Logger log = LoggerFactory.getLogger(RandomMuteManager.class);
     private static RandomMuteManager instance;
-    
+
     private ScheduledExecutorService scheduler;
     private final Random random = new Random();
-    
+
     private ScheduledFuture<?> muteTask;
-    
+
     private JDA jda;
     private Long targetUserId;
     private Long guildId;
@@ -29,7 +32,7 @@ public class RandomMuteManager {
     private RandomMuteManager() {
         initScheduler();
     }
-    
+
     private void initScheduler() {
         if (scheduler == null || scheduler.isShutdown()) {
             scheduler = Executors.newScheduledThreadPool(2);
@@ -81,16 +84,17 @@ public class RandomMuteManager {
         if (running) {
             stop();
         }
-        
+
         if (targetUserId == null || guildId == null) {
-            System.out.println("Random Mute: Aucune cible définie!");
+            log.warn("[RandomMute] Aucune cible définie, impossible de démarrer.");
             return;
         }
 
         initScheduler();
         running = true;
         scheduleNextMute();
-        System.out.println("Random Mute démarré! Cible: " + targetUserId + ", Délai max: " + maxDelaySeconds + "s");
+        log.info("[RandomMute] Démarré. Cible: {}, Délai max: {}s, Durée mute: {}ms",
+                targetUserId, maxDelaySeconds, muteDurationMs);
     }
 
     public void stop() {
@@ -99,7 +103,7 @@ public class RandomMuteManager {
             muteTask.cancel(true);
             muteTask = null;
         }
-        System.out.println("Random Mute arrêté!");
+        log.info("[RandomMute] Arrêté.");
     }
 
     private void scheduleNextMute() {
@@ -108,24 +112,24 @@ public class RandomMuteManager {
         }
 
         initScheduler();
-        
+
         int delay = 1 + random.nextInt(Math.max(1, maxDelaySeconds));
-        
+
         try {
             muteTask = scheduler.schedule(() -> {
                 try {
                     performRandomMute();
                 } catch (Exception e) {
-                    System.err.println("Erreur dans performRandomMute: " + e.getMessage());
+                    log.error("[RandomMute] Erreur dans performRandomMute", e);
                     if (running) {
                         scheduleNextMute();
                     }
                 }
             }, delay, TimeUnit.SECONDS);
-            
-            System.out.println("Prochain mute dans " + delay + " secondes");
+
+            log.debug("[RandomMute] Prochain mute dans {} secondes", delay);
         } catch (Exception e) {
-            System.err.println("Erreur scheduling: " + e.getMessage());
+            log.error("[RandomMute] Erreur scheduling", e);
             initScheduler();
             if (running) {
                 scheduleNextMute();
@@ -151,35 +155,39 @@ public class RandomMuteManager {
         }
 
         boolean deafen = random.nextBoolean();
-        
+
         try {
             if (deafen) {
                 guild.deafen(member, true).queue(
                     success -> {
-                        System.out.println("Deafen appliqué à " + member.getEffectiveName());
+                        log.info("[RandomMute] Deafen appliqué à {} pendant {}ms",
+                                member.getEffectiveName(), muteDurationMs);
                         scheduler.schedule(() -> {
                             try {
                                 guild.deafen(member, false).queue();
                             } catch (Exception ignored) {}
                         }, muteDurationMs, TimeUnit.MILLISECONDS);
                     },
-                    error -> System.out.println("Erreur deafen: " + error.getMessage())
+                    error -> log.warn("[RandomMute] Erreur deafen sur {}: {}",
+                            member.getEffectiveName(), error.getMessage())
                 );
             } else {
                 guild.mute(member, true).queue(
                     success -> {
-                        System.out.println("Mute appliqué à " + member.getEffectiveName());
+                        log.info("[RandomMute] Mute appliqué à {} pendant {}ms",
+                                member.getEffectiveName(), muteDurationMs);
                         scheduler.schedule(() -> {
                             try {
                                 guild.mute(member, false).queue();
                             } catch (Exception ignored) {}
                         }, muteDurationMs, TimeUnit.MILLISECONDS);
                     },
-                    error -> System.out.println("Erreur mute: " + error.getMessage())
+                    error -> log.warn("[RandomMute] Erreur mute sur {}: {}",
+                            member.getEffectiveName(), error.getMessage())
                 );
             }
         } catch (Exception e) {
-            System.out.println("Erreur lors du mute: " + e.getMessage());
+            log.error("[RandomMute] Erreur lors du mute de {}", member.getEffectiveName(), e);
         }
 
         if (running) {

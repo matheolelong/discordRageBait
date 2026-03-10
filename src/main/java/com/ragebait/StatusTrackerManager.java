@@ -4,17 +4,20 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StatusTrackerManager {
 
+    private static final Logger log = LoggerFactory.getLogger(StatusTrackerManager.class);
     private static StatusTrackerManager instance;
-    
+
     private JDA jda;
     private Long targetUserId;
     private Long guildId;
     private Long notificationChannelId;
     private boolean enabled = false;
-    
+
     // Stocke le dernier statut personnalisé pour détecter les changements
     private String lastCustomStatus = null;
 
@@ -55,11 +58,11 @@ public class StatusTrackerManager {
 
     public void enable() {
         if (targetUserId == null || notificationChannelId == null) {
-            System.out.println("Status Tracker: Cible ou salon non défini!");
+            log.warn("[StatusTracker] Cible ou salon de notification non défini.");
             return;
         }
         enabled = true;
-        
+
         // Initialiser le statut actuel
         if (jda != null && guildId != null) {
             var guild = jda.getGuildById(guildId);
@@ -75,10 +78,12 @@ public class StatusTrackerManager {
                 }
             }
         }
+        log.info("[StatusTracker] Activé. Surveillance de: {}", targetUserId);
     }
 
     public void disable() {
         enabled = false;
+        log.info("[StatusTracker] Désactivé.");
     }
 
     public void onPresenceUpdate(Member member) {
@@ -97,7 +102,7 @@ public class StatusTrackerManager {
 
         String userName = member.getEffectiveName();
         String newCustomStatus = null;
-        
+
         // Chercher le statut personnalisé actuel
         for (Activity activity : member.getActivities()) {
             if (activity.getType() == Activity.ActivityType.CUSTOM_STATUS) {
@@ -119,7 +124,8 @@ public class StatusTrackerManager {
 
         // Nouveau statut détecté !
         lastCustomStatus = newCustomStatus;
-        
+        log.info("[StatusTracker] Nouveau statut de {}: {}", userName, newCustomStatus);
+
         String message = "📝 **Nouvelle citation de " + userName + " :**\n> " + newCustomStatus;
         channel.sendMessage(message).queue();
     }

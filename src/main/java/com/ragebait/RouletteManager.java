@@ -3,6 +3,8 @@ package com.ragebait;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.Color;
 import java.util.*;
@@ -10,6 +12,7 @@ import java.util.concurrent.*;
 
 public class RouletteManager {
 
+    private static final Logger log = LoggerFactory.getLogger(RouletteManager.class);
     private static RouletteManager instance;
     
     private JDA jda;
@@ -154,7 +157,7 @@ public class RouletteManager {
         try {
             spinTask = scheduler.schedule(this::spin, delaySeconds, TimeUnit.SECONDS);
         } catch (Exception e) {
-            System.err.println("Erreur scheduling roulette: " + e.getMessage());
+            log.error("[Roulette] Erreur scheduling roulette", e);
         }
     }
     

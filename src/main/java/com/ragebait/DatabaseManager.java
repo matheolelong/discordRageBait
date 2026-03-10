@@ -4,8 +4,12 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DatabaseManager {
+
+    private static final Logger log = LoggerFactory.getLogger(DatabaseManager.class);
 
     private static DatabaseManager instance;
 
@@ -30,7 +34,7 @@ public class DatabaseManager {
         this.password = password;
 
         initTables();
-        System.out.println("[DB] Connexion PostgreSQL établie.");
+        log.info("[DB] Connexion PostgreSQL établie à {}", url);
     }
 
     public static synchronized DatabaseManager getInstance() {
@@ -73,7 +77,7 @@ public class DatabaseManager {
 
         try (Connection conn = getConnection(); Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
-            System.out.println("[DB] Tables initialisées.");
+            log.info("[DB] Tables initialisées.");
         } catch (SQLException e) {
             throw new RuntimeException("Erreur initialisation des tables PostgreSQL: " + e.getMessage(), e);
         }

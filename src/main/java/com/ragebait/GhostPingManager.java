@@ -2,6 +2,8 @@ package com.ragebait;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,11 +14,12 @@ import java.util.concurrent.TimeUnit;
 
 public class GhostPingManager {
 
+    private static final Logger log = LoggerFactory.getLogger(GhostPingManager.class);
     private static GhostPingManager instance;
-    
+
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private ScheduledFuture<?> ghostPingTask;
-    
+
     private JDA jda;
     private Long targetUserId;
     private final Set<Long> channelIds = new HashSet<>();
@@ -81,19 +84,19 @@ public class GhostPingManager {
         if (running) {
             return;
         }
-        
+
         if (channelIds.isEmpty()) {
-            System.out.println("Ghost Ping: Aucun salon défini!");
+            log.warn("[GhostPing] Aucun salon défini, impossible de démarrer.");
             return;
         }
 
         running = true;
-        
+
         ghostPingTask = scheduler.scheduleAtFixedRate(() -> {
             sendGhostPings();
         }, 0, intervalSeconds, TimeUnit.SECONDS);
-        
-        System.out.println("Ghost Ping démarré! Intervalle: " + intervalSeconds + " secondes");
+
+        log.info("[GhostPing] Démarré. Cible: {}, Intervalle: {}s", targetUserId, intervalSeconds);
     }
 
     public void stop() {
@@ -102,7 +105,7 @@ public class GhostPingManager {
             ghostPingTask = null;
         }
         running = false;
-        System.out.println("Ghost Ping arrêté!");
+        log.info("[GhostPing] Arrêté.");
     }
 
     private void sendGhostPings() {
@@ -116,22 +119,22 @@ public class GhostPingManager {
         // Choisir un salon aléatoire
         Long[] channelArray = channelIds.toArray(new Long[0]);
         Long randomChannelId = channelArray[(int) (Math.random() * channelArray.length)];
-        
+
         TextChannel channel = jda.getTextChannelById(randomChannelId);
         if (channel != null) {
             channel.sendMessage(pingMessage).queue(message -> {
                 // Supprimer le message après 1 seconde
                 scheduler.schedule(() -> {
                     message.delete().queue(
-                        success -> System.out.println("Ghost ping envoyé et supprimé dans #" + channel.getName()),
-                        error -> System.out.println("Erreur suppression: " + error.getMessage())
+                        success -> log.info("[GhostPing] Ghost ping envoyé et supprimé dans #{}", channel.getName()),
+                        error -> log.warn("[GhostPing] Erreur suppression du message: {}", error.getMessage())
                     );
                 }, 1, TimeUnit.SECONDS);
             }, error -> {
-                System.out.println("Erreur envoi dans " + randomChannelId + ": " + error.getMessage());
+                log.warn("[GhostPing] Erreur envoi dans salon {}: {}", randomChannelId, error.getMessage());
             });
         } else {
-            System.out.println("Salon introuvable: " + randomChannelId);
+            log.warn("[GhostPing] Salon introuvable: {}", randomChannelId);
         }
     }
 

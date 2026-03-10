@@ -24,6 +24,13 @@
             <version>5.2.2</version>
         </dependency>
 
+        <!-- Logback - Implémentation SLF4J pour les logs -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.14</version>
+        </dependency>
+
         <!-- PostgreSQL JDBC Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
