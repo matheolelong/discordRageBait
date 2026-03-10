@@ -393,6 +393,8 @@ public class SlashCommandListener extends ListenerAdapter {
     private static final Map<Long, CasinoManager.BlackjackGame> activeGames = new ConcurrentHashMap<>();
     
     private void handleBalance(SlashCommandInteractionEvent event) {
+        // deferReply car appel BDD potentiellement lent
+        event.deferReply().queue();
         CasinoManager casino = CasinoManager.getInstance();
         var userOption = event.getOption("user");
         User target = userOption != null ? userOption.getAsUser() : event.getUser();
@@ -400,30 +402,30 @@ public class SlashCommandListener extends ListenerAdapter {
         long balance = casino.getBalance(target.getIdLong());
         
         if (target.equals(event.getUser())) {
-            event.reply("💰 Tu as **" + balance + "** 🪙").queue();
+            event.getHook().sendMessage("💰 Tu as **" + balance + "** 🪙").queue();
         } else {
-            event.reply("💰 " + target.getAsMention() + " a **" + balance + "** 🪙").queue();
+            event.getHook().sendMessage("💰 " + target.getAsMention() + " a **" + balance + "** 🪙").queue();
         }
     }
     
     private void handleDaily(SlashCommandInteractionEvent event) {
+        // deferReply car appel BDD potentiellement lent
+        event.deferReply().queue();
         CasinoManager casino = CasinoManager.getInstance();
         var result = casino.claimDaily(event.getUser().getIdLong());
         
         if (result.success()) {
             long newBalance = casino.getBalance(event.getUser().getIdLong());
-            event.reply("🎁 Tu as récupéré **" + result.amount() + "** 🪙!\n💰 Nouveau solde: **" + newBalance + "** 🪙").queue();
+            event.getHook().sendMessage("🎁 Tu as récupéré **" + result.amount() + "** 🪙!\n💰 Nouveau solde: **" + newBalance + "** 🪙").queue();
         } else {
             long hours = result.cooldownRemaining() / 3600;
             long minutes = (result.cooldownRemaining() % 3600) / 60;
-            event.reply("⏰ Tu dois attendre encore **" + hours + "h " + minutes + "m** avant ton prochain daily!").setEphemeral(true).queue();
+            event.getHook().sendMessage("⏰ Tu dois attendre encore **" + hours + "h " + minutes + "m** avant ton prochain daily!").setEphemeral(true).queue();
         }
     }
     
     private void handleSlots(SlashCommandInteractionEvent event) {
-        CasinoManager casino = CasinoManager.getInstance();
-        long balance = casino.getBalance(event.getUser().getIdLong());
-        
+        // replyModal acquitte immédiatement l'interaction — pas de defer nécessaire ici
         TextInput betInput = TextInput.create("bet", "Mise", TextInputStyle.SHORT)
                 .setPlaceholder("Ex: 100")
                 .setMinLength(1)
@@ -439,6 +441,7 @@ public class SlashCommandListener extends ListenerAdapter {
     }
     
     private void handleCoinflip(SlashCommandInteractionEvent event) {
+        // replyModal acquitte immédiatement l'interaction — pas de defer nécessaire ici
         TextInput betInput = TextInput.create("bet", "Mise", TextInputStyle.SHORT)
                 .setPlaceholder("Ex: 100")
                 .setMinLength(1)
@@ -469,6 +472,7 @@ public class SlashCommandListener extends ListenerAdapter {
             return;
         }
         
+        // replyModal acquitte immédiatement l'interaction — pas de defer nécessaire ici
         TextInput betInput = TextInput.create("bet", "Mise", TextInputStyle.SHORT)
                 .setPlaceholder("Ex: 100")
                 .setMinLength(1)
@@ -495,6 +499,9 @@ public class SlashCommandListener extends ListenerAdapter {
     }
     
     private void handleSlotsModal(ModalInteractionEvent event) {
+        // deferReply immédiatement pour éviter le timeout de 3s pendant les appels BDD
+        event.deferReply().queue();
+
         CasinoManager casino = CasinoManager.getInstance();
         long userId = event.getUser().getIdLong();
         
@@ -503,14 +510,14 @@ public class SlashCommandListener extends ListenerAdapter {
         try {
             bet = Long.parseLong(betStr);
         } catch (NumberFormatException e) {
-            event.reply("❌ Mise invalide! Entre un nombre.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Mise invalide! Entre un nombre.").setEphemeral(true).queue();
             return;
         }
         
         var result = casino.playSlots(userId, bet);
         
         if (!result.played()) {
-            event.reply(result.message()).setEphemeral(true).queue();
+            event.getHook().sendMessage(result.message()).setEphemeral(true).queue();
             return;
         }
         
@@ -531,7 +538,7 @@ public class SlashCommandListener extends ListenerAdapter {
         }
         sb.append("💰 Solde: **").append(result.newBalance()).append("** 🪙");
         
-        event.reply(sb.toString())
+        event.getHook().sendMessage(sb.toString())
             .addActionRow(
                 Button.success("slots_replay", "🔄 Rejouer (même mise)"),
                 Button.primary("slots_new", "🎰 Nouvelle mise")
@@ -539,6 +546,9 @@ public class SlashCommandListener extends ListenerAdapter {
     }
     
     private void handleCoinflipModal(ModalInteractionEvent event) {
+        // deferReply immédiatement pour éviter le timeout de 3s pendant les appels BDD
+        event.deferReply().queue();
+
         CasinoManager casino = CasinoManager.getInstance();
         long userId = event.getUser().getIdLong();
         
@@ -549,7 +559,7 @@ public class SlashCommandListener extends ListenerAdapter {
         try {
             bet = Long.parseLong(betStr);
         } catch (NumberFormatException e) {
-            event.reply("❌ Mise invalide! Entre un nombre.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Mise invalide! Entre un nombre.").setEphemeral(true).queue();
             return;
         }
         
@@ -559,14 +569,14 @@ public class SlashCommandListener extends ListenerAdapter {
         } else if (choice.equals("face") || choice.equals("f")) {
             chooseHeads = false;
         } else {
-            event.reply("❌ Choix invalide! Utilise 'pile' ou 'face'").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Choix invalide! Utilise 'pile' ou 'face'").setEphemeral(true).queue();
             return;
         }
         
         var result = casino.playCoinflip(userId, bet, chooseHeads);
         
         if (!result.played()) {
-            event.reply(result.message()).setEphemeral(true).queue();
+            event.getHook().sendMessage(result.message()).setEphemeral(true).queue();
             return;
         }
         
@@ -580,7 +590,7 @@ public class SlashCommandListener extends ListenerAdapter {
         sb.append(result.message()).append("\n");
         sb.append("💰 Solde: **").append(result.newBalance()).append("** 🪙");
         
-        event.reply(sb.toString())
+        event.getHook().sendMessage(sb.toString())
             .addActionRow(
                 Button.success("coinflip_replay_" + (chooseHeads ? "pile" : "face"), "🔄 Rejouer (même mise)"),
                 Button.primary("coinflip_new", "🎲 Nouvelle mise")
@@ -588,6 +598,9 @@ public class SlashCommandListener extends ListenerAdapter {
     }
     
     private void handleBlackjackModal(ModalInteractionEvent event) {
+        // deferReply immédiatement pour éviter le timeout de 3s pendant les appels BDD
+        event.deferReply().queue();
+
         CasinoManager casino = CasinoManager.getInstance();
         long userId = event.getUser().getIdLong();
         
@@ -596,28 +609,28 @@ public class SlashCommandListener extends ListenerAdapter {
         try {
             bet = Long.parseLong(betStr);
         } catch (NumberFormatException e) {
-            event.reply("❌ Mise invalide! Entre un nombre.").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Mise invalide! Entre un nombre.").setEphemeral(true).queue();
             return;
         }
         
         if (bet <= 0) {
-            event.reply("❌ La mise doit être positive!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ La mise doit être positive!").setEphemeral(true).queue();
             return;
         }
         
         if (casino.getBalance(userId) < bet) {
-            event.reply("❌ Tu n'as pas assez de 🪙! (Solde: " + casino.getBalance(userId) + ")").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Tu n'as pas assez de 🪙! (Solde: " + casino.getBalance(userId) + ")").setEphemeral(true).queue();
             return;
         }
         
         if (activeGames.containsKey(userId)) {
-            event.reply("❌ Tu as déjà une partie en cours!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Tu as déjà une partie en cours!").setEphemeral(true).queue();
             return;
         }
         
         var game = casino.startBlackjack(userId, bet);
         if (game == null) {
-            event.reply("❌ Impossible de démarrer la partie!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Impossible de démarrer la partie!").setEphemeral(true).queue();
             return;
         }
         
@@ -627,13 +640,13 @@ public class SlashCommandListener extends ListenerAdapter {
         if (game.isGameOver()) {
             casino.finishBlackjack(game, game.getWinnings());
             activeGames.remove(userId);
-            event.reply(buildBlackjackMessage(game, true))
+            event.getHook().sendMessage(buildBlackjackMessage(game, true))
                 .addActionRow(
                     Button.success("blackjack_replay", "🔄 Rejouer (même mise)"),
                     Button.primary("blackjack_new", "🃏 Nouvelle mise")
                 ).queue();
         } else {
-            event.reply(buildBlackjackMessage(game, false))
+            event.getHook().sendMessage(buildBlackjackMessage(game, false))
                 .addActionRow(
                     Button.primary("bj_hit", "🃏 Hit"),
                     Button.danger("bj_stand", "✋ Stand")
@@ -674,9 +687,12 @@ public class SlashCommandListener extends ListenerAdapter {
         
         // Blackjack Hit/Stand
         if (buttonId.equals("bj_hit") || buttonId.equals("bj_stand")) {
+            // deferEdit immédiatement pour éviter le timeout de 3s
+            event.deferEdit().queue();
+
             var game = activeGames.get(userId);
             if (game == null) {
-                event.reply("❌ Tu n'as pas de partie en cours!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Tu n'as pas de partie en cours!").setEphemeral(true).queue();
                 return;
             }
             
@@ -685,19 +701,19 @@ public class SlashCommandListener extends ListenerAdapter {
                 if (game.isGameOver()) {
                     casino.finishBlackjack(game, game.getWinnings());
                     activeGames.remove(userId);
-                    event.editMessage(buildBlackjackMessage(game, true))
+                    event.getHook().editOriginal(buildBlackjackMessage(game, true))
                         .setActionRow(
                             Button.success("blackjack_replay", "🔄 Rejouer (même mise)"),
                             Button.primary("blackjack_new", "🃏 Nouvelle mise")
                         ).queue();
                 } else {
-                    event.editMessage(buildBlackjackMessage(game, false)).queue();
+                    event.getHook().editOriginal(buildBlackjackMessage(game, false)).queue();
                 }
             } else {
                 game.stand();
                 casino.finishBlackjack(game, game.getWinnings());
                 activeGames.remove(userId);
-                event.editMessage(buildBlackjackMessage(game, true))
+                event.getHook().editOriginal(buildBlackjackMessage(game, true))
                     .setActionRow(
                         Button.success("blackjack_replay", "🔄 Rejouer (même mise)"),
                         Button.primary("blackjack_new", "🃏 Nouvelle mise")
@@ -708,15 +724,18 @@ public class SlashCommandListener extends ListenerAdapter {
         
         // Slots replay
         if (buttonId.equals("slots_replay")) {
+            // deferEdit immédiatement pour éviter le timeout de 3s
+            event.deferEdit().queue();
+
             Long lastBet = lastBets.get(userId);
             if (lastBet == null) {
-                event.reply("❌ Aucune mise précédente trouvée!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Aucune mise précédente trouvée!").setEphemeral(true).queue();
                 return;
             }
             
             var result = casino.playSlots(userId, lastBet);
             if (!result.played()) {
-                event.reply(result.message()).setEphemeral(true).queue();
+                event.getHook().sendMessage(result.message()).setEphemeral(true).queue();
                 return;
             }
             
@@ -736,7 +755,7 @@ public class SlashCommandListener extends ListenerAdapter {
             }
             sb.append("💰 Solde: **").append(result.newBalance()).append("** 🪙");
             
-            event.editMessage(sb.toString()).queue();
+            event.getHook().editOriginal(sb.toString()).queue();
             return;
         }
         
@@ -753,15 +772,19 @@ public class SlashCommandListener extends ListenerAdapter {
                     .addActionRow(betInput)
                     .build();
             
+            // replyModal acquitte l'interaction directement
             event.replyModal(modal).queue();
             return;
         }
         
         // Coinflip replay
         if (buttonId.startsWith("coinflip_replay_")) {
+            // deferEdit immédiatement pour éviter le timeout de 3s
+            event.deferEdit().queue();
+
             Long lastBet = lastBets.get(userId);
             if (lastBet == null) {
-                event.reply("❌ Aucune mise précédente trouvée!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Aucune mise précédente trouvée!").setEphemeral(true).queue();
                 return;
             }
             
@@ -769,7 +792,7 @@ public class SlashCommandListener extends ListenerAdapter {
             var result = casino.playCoinflip(userId, lastBet, chooseHeads);
             
             if (!result.played()) {
-                event.reply(result.message()).setEphemeral(true).queue();
+                event.getHook().sendMessage(result.message()).setEphemeral(true).queue();
                 return;
             }
             
@@ -782,7 +805,7 @@ public class SlashCommandListener extends ListenerAdapter {
             sb.append(result.message()).append("\n");
             sb.append("💰 Solde: **").append(result.newBalance()).append("** 🪙");
             
-            event.editMessage(sb.toString()).queue();
+            event.getHook().editOriginal(sb.toString()).queue();
             return;
         }
         
@@ -807,31 +830,35 @@ public class SlashCommandListener extends ListenerAdapter {
                     .addActionRow(choiceInput)
                     .build();
             
+            // replyModal acquitte l'interaction directement
             event.replyModal(modal).queue();
             return;
         }
         
         // Blackjack replay
         if (buttonId.equals("blackjack_replay")) {
+            // deferEdit immédiatement pour éviter le timeout de 3s
+            event.deferEdit().queue();
+
             Long lastBet = lastBets.get(userId);
             if (lastBet == null) {
-                event.reply("❌ Aucune mise précédente trouvée!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Aucune mise précédente trouvée!").setEphemeral(true).queue();
                 return;
             }
             
             if (activeGames.containsKey(userId)) {
-                event.reply("❌ Tu as déjà une partie en cours!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Tu as déjà une partie en cours!").setEphemeral(true).queue();
                 return;
             }
             
             if (casino.getBalance(userId) < lastBet) {
-                event.reply("❌ Tu n'as pas assez de 🪙! (Solde: " + casino.getBalance(userId) + ")").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Tu n'as pas assez de 🪙! (Solde: " + casino.getBalance(userId) + ")").setEphemeral(true).queue();
                 return;
             }
             
             var game = casino.startBlackjack(userId, lastBet);
             if (game == null) {
-                event.reply("❌ Impossible de démarrer la partie!").setEphemeral(true).queue();
+                event.getHook().sendMessage("❌ Impossible de démarrer la partie!").setEphemeral(true).queue();
                 return;
             }
             
@@ -840,13 +867,13 @@ public class SlashCommandListener extends ListenerAdapter {
             if (game.isGameOver()) {
                 casino.finishBlackjack(game, game.getWinnings());
                 activeGames.remove(userId);
-                event.editMessage(buildBlackjackMessage(game, true))
+                event.getHook().editOriginal(buildBlackjackMessage(game, true))
                     .setActionRow(
                         Button.success("blackjack_replay", "🔄 Rejouer (même mise)"),
                         Button.primary("blackjack_new", "🃏 Nouvelle mise")
                     ).queue();
             } else {
-                event.editMessage(buildBlackjackMessage(game, false))
+                event.getHook().editOriginal(buildBlackjackMessage(game, false))
                     .setActionRow(
                         Button.primary("bj_hit", "🃏 Hit"),
                         Button.danger("bj_stand", "✋ Stand")
@@ -873,43 +900,48 @@ public class SlashCommandListener extends ListenerAdapter {
                     .addActionRow(betInput)
                     .build();
             
+            // replyModal acquitte l'interaction directement
             event.replyModal(modal).queue();
         }
     }
     
     private void handleGive(SlashCommandInteractionEvent event) {
+        // deferReply car appel BDD potentiellement lent
+        event.deferReply().queue();
         CasinoManager casino = CasinoManager.getInstance();
         User target = event.getOption("user").getAsUser();
         long amount = event.getOption("montant").getAsLong();
         
         if (target.isBot()) {
-            event.reply("❌ Tu ne peux pas donner de 🪙 à un bot!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Tu ne peux pas donner de 🪙 à un bot!").setEphemeral(true).queue();
             return;
         }
         
         if (target.getIdLong() == event.getUser().getIdLong()) {
-            event.reply("❌ Tu ne peux pas te donner de 🪙 à toi-même!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Tu ne peux pas te donner de 🪙 à toi-même!").setEphemeral(true).queue();
             return;
         }
         
         if (amount <= 0) {
-            event.reply("❌ Le montant doit être positif!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Le montant doit être positif!").setEphemeral(true).queue();
             return;
         }
         
         if (casino.transfer(event.getUser().getIdLong(), target.getIdLong(), amount)) {
-            event.reply("✅ Tu as donné **" + amount + "** 🪙 à " + target.getAsMention() + "\n💰 Ton solde: **" + casino.getBalance(event.getUser().getIdLong()) + "** 🪙").queue();
+            event.getHook().sendMessage("✅ Tu as donné **" + amount + "** 🪙 à " + target.getAsMention() + "\n💰 Ton solde: **" + casino.getBalance(event.getUser().getIdLong()) + "** 🪙").queue();
         } else {
-            event.reply("❌ Tu n'as pas assez de 🪙!").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ Tu n'as pas assez de 🪙!").setEphemeral(true).queue();
         }
     }
     
     private void handleLeaderboard(SlashCommandInteractionEvent event) {
+        // deferReply car appel BDD potentiellement lent
+        event.deferReply().queue();
         CasinoManager casino = CasinoManager.getInstance();
         var leaderboard = casino.getLeaderboard(10);
         
         if (leaderboard.isEmpty()) {
-            event.reply("📊 Aucun joueur n'a encore de 🪙!").queue();
+            event.getHook().sendMessage("📊 Aucun joueur n'a encore de 🪙!").queue();
             return;
         }
         
@@ -942,7 +974,7 @@ public class SlashCommandListener extends ListenerAdapter {
             rank++;
         }
         
-        event.reply(sb.toString()).queue();
+        event.getHook().sendMessage(sb.toString()).queue();
     }
     
     // ============ ROULETTE COMMANDS ============
@@ -1004,10 +1036,12 @@ public class SlashCommandListener extends ListenerAdapter {
     }
     
     private void handleBet(SlashCommandInteractionEvent event) {
+        // deferReply car appel BDD potentiellement lent
+        event.deferReply().setEphemeral(true).queue();
         RouletteManager roulette = RouletteManager.getInstance();
         
         if (!roulette.isRunning()) {
-            event.reply("❌ La roulette n'est pas active! Demande à un admin de la démarrer avec `/roulette start`").setEphemeral(true).queue();
+            event.getHook().sendMessage("❌ La roulette n'est pas active! Demande à un admin de la démarrer avec `/roulette start`").setEphemeral(true).queue();
             return;
         }
         
@@ -1015,7 +1049,7 @@ public class SlashCommandListener extends ListenerAdapter {
         String betType = event.getOption("type").getAsString();
         
         String result = roulette.placeBet(event.getUser().getIdLong(), betType, amount);
-        event.reply(result).setEphemeral(true).queue();
+        event.getHook().sendMessage(result).setEphemeral(true).queue();
     }
     
     private void handleMyBets(SlashCommandInteractionEvent event) {
