@@ -53,7 +53,7 @@ docker rm \$BOT_NAME 2>/dev/null
 cd \$BOT_DIR
 git pull
 docker build -t \$IMAGE_NAME .
-docker run -d --name \$BOT_NAME --env-file \$ENV_FILE --restart unless-stopped \$IMAGE_NAME
+docker run -d --rm --name \$BOT_NAME --env-file \$ENV_FILE \$IMAGE_NAME
 ;;
 
 *)
