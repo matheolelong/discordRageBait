@@ -32,6 +32,14 @@ CREATE TABLE IF NOT EXISTS qui_exclusions (
     user_id BIGINT PRIMARY KEY
 );
 
+-- Statut tracker persistant
+CREATE TABLE IF NOT EXISTS status_tracker (
+    guild_id   BIGINT PRIMARY KEY,
+    user_id    BIGINT NOT NULL,
+    channel_id BIGINT NOT NULL,
+    enabled    BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 -- ============================================================
 --  Données initiales optionnelles (décommente si besoin)
 -- ============================================================

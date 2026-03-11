@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.*;
+
 public class StatusTrackerManager {
 
     private static final Logger log = LoggerFactory.getLogger(StatusTrackerManager.class);
@@ -38,10 +40,12 @@ public class StatusTrackerManager {
         this.targetUserId = userId;
         this.guildId = guildId;
         this.lastCustomStatus = null;
+        saveToDb();
     }
 
     public void setNotificationChannel(long channelId) {
         this.notificationChannelId = channelId;
+        saveToDb();
     }
 
     public Long getTargetUserId() {
@@ -62,6 +66,7 @@ public class StatusTrackerManager {
             return;
         }
         enabled = true;
+        saveToDb();
 
         // Initialiser le statut actuel
         if (jda != null && guildId != null) {
@@ -83,7 +88,46 @@ public class StatusTrackerManager {
 
     public void disable() {
         enabled = false;
+        saveToDb();
         log.info("[StatusTracker] Désactivé.");
+    }
+
+    // Sauvegarde l'état du tracker dans la base
+    private void saveToDb() {
+        if (guildId == null) return;
+        try (Connection conn = DatabaseManager.getInstance().getConnection()) {
+            String sql = "INSERT INTO status_tracker (guild_id, user_id, channel_id, enabled) VALUES (?, ?, ?, ?) " +
+                    "ON CONFLICT (guild_id) DO UPDATE SET user_id=EXCLUDED.user_id, channel_id=EXCLUDED.channel_id, enabled=EXCLUDED.enabled";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, guildId);
+                ps.setLong(2, targetUserId != null ? targetUserId : 0);
+                ps.setLong(3, notificationChannelId != null ? notificationChannelId : 0);
+                ps.setBoolean(4, enabled);
+                ps.executeUpdate();
+            }
+        } catch (SQLException e) {
+            log.error("[StatusTracker] Erreur saveToDb: {}", e.getMessage());
+        }
+    }
+
+    // Charge l'état du tracker depuis la base
+    public void loadFromDb(long guildId) {
+        try (Connection conn = DatabaseManager.getInstance().getConnection()) {
+            String sql = "SELECT user_id, channel_id, enabled FROM status_tracker WHERE guild_id = ?";
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setLong(1, guildId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        this.guildId = guildId;
+                        this.targetUserId = rs.getLong("user_id");
+                        this.notificationChannelId = rs.getLong("channel_id");
+                        this.enabled = rs.getBoolean("enabled");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            log.error("[StatusTracker] Erreur loadFromDb: {}", e.getMessage());
+        }
     }
 
     public void onPresenceUpdate(Member member) {

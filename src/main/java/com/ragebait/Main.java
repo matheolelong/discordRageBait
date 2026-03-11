@@ -70,7 +70,15 @@ public class Main {
 
             // Initialiser le StatusTrackerManager
             StatusTrackerManager statusTracker = StatusTrackerManager.getInstance();
-            statusTracker.setJda(jda);
+                        statusTracker.setJda(jda);
+                        // Charger le status tracker pour chaque serveur
+                        for (var guild : jda.getGuilds()) {
+                                statusTracker.loadFromDb(guild.getIdLong());
+                                // Si le tracking est activé, on le relance
+                                if (statusTracker.isEnabled()) {
+                                        statusTracker.enable();
+                                }
+                        }
 
             // Initialiser le CasinoManager (données directement dans PostgreSQL)
             CasinoManager.getInstance();
