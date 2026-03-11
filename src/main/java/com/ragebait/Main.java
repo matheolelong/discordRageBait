@@ -59,6 +59,11 @@ public class Main {
             GhostPingManager ghostPing = GhostPingManager.getInstance();
             ghostPing.setJda(jda);
 
+                        // Initialiser le VoiceRewardManager
+                        VoiceRewardManager voiceReward = VoiceRewardManager.getInstance();
+                        voiceReward.setJda(jda);
+                        voiceReward.start();
+
             // Initialiser le RandomMuteManager
             RandomMuteManager randomMute = RandomMuteManager.getInstance();
             randomMute.setJda(jda);
@@ -137,15 +142,16 @@ public class Main {
 
             log.info("Bot prêt!");
 
-            // Arrêter proprement à la fermeture
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.info("Arrêt du bot en cours...");
-                randomMute.shutdown();
-                ghostPing.shutdown();
-                roulette.shutdown();
-                jda.shutdown();
-                log.info("Bot arrêté.");
-            }));
+                        // Arrêter proprement à la fermeture
+                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                                log.info("Arrêt du bot en cours...");
+                                randomMute.shutdown();
+                                ghostPing.shutdown();
+                                roulette.shutdown();
+                                voiceReward.shutdown();
+                                jda.shutdown();
+                                log.info("Bot arrêté.");
+                        }));
 
             // Garder le bot en vie (bloque jusqu'à l'arrêt)
             jda.awaitShutdown();
