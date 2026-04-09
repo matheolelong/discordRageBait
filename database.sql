@@ -1,6 +1,6 @@
--- ============================================================
---  discordRageBait - Schéma PostgreSQL
---  Exécuter ce fichier une seule fois pour initialiser la base
+﻿-- ============================================================
+--  discordRageBait - Schema PostgreSQL
+--  Executer ce fichier une seule fois pour initialiser la base
 --  psql -U <user> -d <database> -f database.sql
 -- ============================================================
 
@@ -16,18 +16,18 @@ CREATE TABLE IF NOT EXISTS casino_daily (
     last_claim BIGINT NOT NULL
 );
 
--- Paramètres généraux du bot (target, interval...)
+-- Parametres generaux du bot (target, interval...)
 CREATE TABLE IF NOT EXISTS config_settings (
     key   VARCHAR(64) PRIMARY KEY,
     value VARCHAR(256) NOT NULL
 );
 
--- Salons configurés pour le ghost ping
+-- Salons configures pour le ghost ping
 CREATE TABLE IF NOT EXISTS config_channels (
     channel_id BIGINT PRIMARY KEY
 );
 
--- Utilisateurs exclus de la commande "Qui t'a demandé"
+-- Utilisateurs exclus de la commande "Qui t'a demande"
 CREATE TABLE IF NOT EXISTS qui_exclusions (
     user_id BIGINT PRIMARY KEY
 );
@@ -41,11 +41,11 @@ CREATE TABLE IF NOT EXISTS status_tracker (
 );
 
 -- ============================================================
---  Système de caisses (CS:GO-like)
+--  Systeme de caisses (CS:GO-like)
 -- ============================================================
 
 -- Inventaire des caisses par joueur
--- case_name correspond aux noms définis dans cases/cases.json
+-- case_name correspond aux noms definis dans cases/cases.json
 CREATE TABLE IF NOT EXISTS case_inventory (
     user_id   BIGINT      NOT NULL,
     case_name VARCHAR(64) NOT NULL,
@@ -53,10 +53,23 @@ CREATE TABLE IF NOT EXISTS case_inventory (
     PRIMARY KEY (user_id, case_name)
 );
 
--- Index pour accélérer les requêtes par joueur
 CREATE INDEX IF NOT EXISTS idx_case_inventory_user ON case_inventory (user_id);
 
+-- Inventaire des armes droppees par joueur
+-- Chaque ouverture de caisse stocke l'arme obtenue ici
+CREATE TABLE IF NOT EXISTS weapon_inventory (
+    id           SERIAL           PRIMARY KEY,
+    user_id      BIGINT           NOT NULL,
+    weapon_name  VARCHAR(128)     NOT NULL,
+    case_name    VARCHAR(64)      NOT NULL,
+    quality      VARCHAR(32)      NOT NULL,
+    float_value  DOUBLE PRECISION NOT NULL,
+    price        BIGINT           NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_weapon_inventory_user ON weapon_inventory (user_id);
+
 -- ============================================================
---  Données initiales optionnelles (décommente si besoin)
+--  Donnees initiales optionnelles (decommente si besoin)
 -- ============================================================
 -- INSERT INTO config_settings (key, value) VALUES ('interval', '300') ON CONFLICT DO NOTHING;

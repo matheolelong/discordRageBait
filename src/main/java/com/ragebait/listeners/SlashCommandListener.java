@@ -74,6 +74,8 @@ public class SlashCommandListener extends ListenerAdapter {
             case "buycase" -> handleBuyCase(event);
             case "opencase" -> handleOpenCase(event);
             case "inventory" -> handleInventory(event);
+            case "weapons" -> handleWeapons(event);
+            case "sell" -> handleSell(event);
             default -> event.reply("Commande inconnue!").setEphemeral(true).queue();
         }
     }
@@ -1108,10 +1110,31 @@ public class SlashCommandListener extends ListenerAdapter {
     /** /inventory - inventaire des caisses du joueur */
     private void handleInventory(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
-        caseHandler.handleInventory(
+        caseHandler.handleCaseInventory(
                 event.getHook(),
                 event.getUser().getIdLong(),
                 event.getUser().getName()
+        );
+    }
+
+    /** /weapons - inventaire des armes droppees */
+    private void handleWeapons(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        caseHandler.handleWeapons(
+                event.getHook(),
+                event.getUser().getIdLong(),
+                event.getUser().getName()
+        );
+    }
+
+    /** /sell id:<n> - vendre une arme */
+    private void handleSell(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        int weaponId = event.getOption("id").getAsInt();
+        caseHandler.handleSell(
+                event.getHook(),
+                event.getUser().getIdLong(),
+                weaponId
         );
     }
 }
