@@ -1,4 +1,4 @@
-package com.ragebait;
+﻿package com.ragebait;
 
 import com.ragebait.listeners.MessageListener;
 import com.ragebait.listeners.PresenceListener;
@@ -18,43 +18,43 @@ public class Main {
     private static final Logger log = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
-        // Récupère le token depuis les variables d'environnement ou les arguments
+        // RÃ©cupÃ¨re le token depuis les variables d'environnement ou les arguments
         String token = System.getenv("DISCORD_TOKEN");
         if (token == null && args.length > 0) {
             token = args[0];
         }
         if (token == null) {
-            log.error("Token Discord non trouvé! Définissez DISCORD_TOKEN ou passez-le en argument.");
+            log.error("Token Discord non trouvÃ©! DÃ©finissez DISCORD_TOKEN ou passez-le en argument.");
             System.exit(1);
         }
 
-        log.info("=== Démarrage du bot RageBait ===");
+        log.info("=== DÃ©marrage du bot RageBait ===");
 
-        // Initialiser la base de données PostgreSQL
+        // Initialiser la base de donnÃ©es PostgreSQL
         DatabaseManager.getInstance();
 
         try {
-            // Création du bot avec JDA
+            // CrÃ©ation du bot avec JDA
             JDA jda = JDABuilder.createDefault(token)
-                    // Intents nécessaires pour lire les messages, le vocal et les présences
+                    // Intents nÃ©cessaires pour lire les messages, le vocal et les prÃ©sences
                     .enableIntents(GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
                                    GatewayIntent.GUILD_VOICE_STATES, GatewayIntent.GUILD_PRESENCES,
                                    GatewayIntent.GUILD_MEMBERS)
-                    // Cache tous les membres pour recevoir les événements de présence
+                    // Cache tous les membres pour recevoir les Ã©vÃ©nements de prÃ©sence
                     .setMemberCachePolicy(net.dv8tion.jda.api.utils.MemberCachePolicy.ALL)
                     .enableCache(net.dv8tion.jda.api.utils.cache.CacheFlag.ONLINE_STATUS,
                                  net.dv8tion.jda.api.utils.cache.CacheFlag.ACTIVITY)
-                    // Statut affiché sur Discord
-                    .setActivity(Activity.playing("Rage Bait 🎣"))
+                    // Statut affichÃ© sur Discord
+                    .setActivity(Activity.playing("Rage Bait ðŸŽ£"))
                     // Ajout des listeners
                     .addEventListeners(new MessageListener())
                     .addEventListeners(new SlashCommandListener())
                     .addEventListeners(new PresenceListener())
                     .build();
 
-            // Attendre que le bot soit prêt
+            // Attendre que le bot soit prÃªt
             jda.awaitReady();
-            log.info("Bot connecté en tant que: {}", jda.getSelfUser().getName());
+            log.info("Bot connectÃ© en tant que: {}", jda.getSelfUser().getName());
 
             // Initialiser le GhostPingManager
             GhostPingManager ghostPing = GhostPingManager.getInstance();
@@ -75,102 +75,109 @@ public class Main {
                         // Charger le status tracker pour chaque serveur
                         for (var guild : jda.getGuilds()) {
                                 statusTracker.loadFromDb(guild.getIdLong());
-                                // Si le tracking est activé, on le relance
+                                // Si le tracking est activÃ©, on le relance
                                 if (statusTracker.isEnabled()) {
                                         statusTracker.enable();
                                 }
                         }
 
-            // Initialiser le CasinoManager (données directement dans PostgreSQL)
+            // Initialiser le CasinoManager (donnÃ©es directement dans PostgreSQL)
             CasinoManager.getInstance();
 
-            // Initialiser le CaseManager (charge cases/cases.json + crée la table d'inventaire)
+            // Initialiser le CaseManager (charge cases/cases.json + crÃ©e la table d'inventaire)
             CaseManager.getInstance();
-            log.info("Système de caisses initialisé.");
+            log.info("SystÃ¨me de caisses initialisÃ©.");
 
             // Initialiser le RouletteManager
             RouletteManager roulette = RouletteManager.getInstance();
             roulette.setJda(jda);
 
-            // Charger la configuration sauvegardée
+            // Charger la configuration sauvegardÃ©e
             ConfigManager.loadConfig(ghostPing);
 
-            // Enregistrer les commandes slash pour chaque serveur (mise à jour instantanée)
+            // Enregistrer les commandes slash pour chaque serveur (mise Ã  jour instantanÃ©e)
             for (var guild : jda.getGuilds()) {
                 guild.updateCommands().addCommands(
-                        Commands.slash("ping", "Répond avec Pong!"),
+                        Commands.slash("ping", "RÃ©pond avec Pong!"),
                         Commands.slash("ragebait", "Envoie un message provocateur")
-                                .addOption(OptionType.STRING, "message", "Le message à envoyer", false),
+                                .addOption(OptionType.STRING, "message", "Le message Ã  envoyer", false),
                         Commands.slash("info", "Affiche les informations du bot"),
                         // Commandes Ghost Ping
-                        Commands.slash("ghostping", "Gère le ghost ping automatique")
+                        Commands.slash("ghostping", "GÃ¨re le ghost ping automatique")
                                 .addOption(OptionType.STRING, "action", "start/stop/status", true),
-                        Commands.slash("settarget", "Définit la cible du ghost ping")
-                                .addOption(OptionType.USER, "user", "L'utilisateur à ping", true),
+                        Commands.slash("settarget", "DÃ©finit la cible du ghost ping")
+                                .addOption(OptionType.USER, "user", "L'utilisateur Ã  ping", true),
                         Commands.slash("addchannel", "Ajoute un salon pour le ghost ping")
-                                .addOption(OptionType.CHANNEL, "channel", "Le salon à ajouter", true),
+                                .addOption(OptionType.CHANNEL, "channel", "Le salon Ã  ajouter", true),
                         Commands.slash("removechannel", "Retire un salon du ghost ping")
-                                .addOption(OptionType.CHANNEL, "channel", "Le salon à retirer", true),
+                                .addOption(OptionType.CHANNEL, "channel", "Le salon Ã  retirer", true),
                         Commands.slash("setinterval", "Change l'intervalle entre les ghost pings")
                                 .addOption(OptionType.INTEGER, "minutes", "Intervalle en minutes", true)
-                                .addOption(OptionType.INTEGER, "secondes", "Secondes supplémentaires", false),
+                                .addOption(OptionType.INTEGER, "secondes", "Secondes supplÃ©mentaires", false),
                         // Commande Random Mute
-                        Commands.slash("randommute", "Mute/deafen aléatoire sur une cible")
+                        Commands.slash("randommute", "Mute/deafen alÃ©atoire sur une cible")
                                 .addOption(OptionType.STRING, "action", "start/stop/status", true)
-                                .addOption(OptionType.USER, "user", "L'utilisateur à mute (pour start)", false)
-                                .addOption(OptionType.INTEGER, "delai", "Délai max en secondes (défaut: 30)", false)
-                                .addOption(OptionType.INTEGER, "duree", "Durée du mute en ms (défaut: 500)", false),
+                                .addOption(OptionType.USER, "user", "L'utilisateur Ã  mute (pour start)", false)
+                                .addOption(OptionType.INTEGER, "delai", "DÃ©lai max en secondes (dÃ©faut: 30)", false)
+                                .addOption(OptionType.INTEGER, "duree", "DurÃ©e du mute en ms (dÃ©faut: 500)", false),
                         // Commande Status Tracker
                         Commands.slash("statustrack", "Surveille le statut d'un utilisateur")
                                 .addOption(OptionType.STRING, "action", "start/stop/status", true)
-                                .addOption(OptionType.USER, "user", "L'utilisateur à surveiller (pour start)", false)
+                                .addOption(OptionType.USER, "user", "L'utilisateur Ã  surveiller (pour start)", false)
                                 .addOption(OptionType.CHANNEL, "channel", "Le salon pour les notifications (pour start)", false),
                         // Commande Qui Exclusion
-                        Commands.slash("quiexclude", "Exclure/inclure un utilisateur de 'Qui t'a demandé'")
+                        Commands.slash("quiexclude", "Exclure/inclure un utilisateur de 'Qui t'a demandÃ©'")
                                 .addOption(OptionType.STRING, "action", "add/remove/list", true)
-                                .addOption(OptionType.USER, "user", "L'utilisateur à exclure/inclure", false),
+                                .addOption(OptionType.USER, "user", "L'utilisateur Ã  exclure/inclure", false),
                         // Commandes Casino
                         Commands.slash("balance", "Affiche ton solde ou celui d'un autre")
                                 .addOption(OptionType.USER, "user", "L'utilisateur dont tu veux voir le solde", false),
-                        Commands.slash("daily", "Récupère tes 🪙 quotidiennes!"),
-                        Commands.slash("slots", "Joue à la machine à sous"),
+                        Commands.slash("daily", "RÃ©cupÃ¨re tes ðŸª™ quotidiennes!"),
+                        Commands.slash("slots", "Joue Ã  la machine Ã  sous"),
                         Commands.slash("coinflip", "Pile ou Face"),
                         Commands.slash("blackjack", "Joue au Blackjack"),
-                        Commands.slash("give", "Donne des 🪙 à quelqu'un")
+                        Commands.slash("give", "Donne des ðŸª™ Ã  quelqu'un")
                                 .addOption(OptionType.USER, "user", "Destinataire", true)
-                                .addOption(OptionType.INTEGER, "montant", "Montant à donner", true),
+                                .addOption(OptionType.INTEGER, "montant", "Montant Ã  donner", true),
                         Commands.slash("leaderboard", "Classement des plus riches"),
                         // Roulette
-                        Commands.slash("roulette", "Gère la roulette")
+                        Commands.slash("roulette", "GÃ¨re la roulette")
                                 .addOption(OptionType.STRING, "action", "start/stop/status/delay", true)
                                 .addOption(OptionType.CHANNEL, "channel", "Salon pour la roulette (pour start)", false)
-                                .addOption(OptionType.INTEGER, "secondes", "Délai entre les tours (pour delay)", false),
-                        Commands.slash("bet", "Place un pari à la roulette")
-                                .addOption(OptionType.INTEGER, "montant", "Montant à miser", true)
+                                .addOption(OptionType.INTEGER, "secondes", "DÃ©lai entre les tours (pour delay)", false),
+                        Commands.slash("bet", "Place un pari Ã  la roulette")
+                                .addOption(OptionType.INTEGER, "montant", "Montant Ã  miser", true)
                                 .addOption(OptionType.STRING, "type", "Type de pari (rouge/noir/pair/impair/0-36...)", true),
-                        Commands.slash("mybets", "Voir tes paris en cours à la roulette")
+                        Commands.slash("mybets", "Voir tes paris en cours \u00e0 la roulette"),
+                        // Caisses CS:GO-like
+                        Commands.slash("cases", "Liste des caisses disponibles"),
+                        Commands.slash("buycase", "Achete une caisse")
+                                .addOption(OptionType.STRING, "casename", "Nom de la caisse (ex: alpha_case)", true),
+                        Commands.slash("opencase", "Ouvre une caisse de ton inventaire")
+                                .addOption(OptionType.STRING, "casename", "Nom de la caisse a ouvrir", true),
+                        Commands.slash("inventory", "Voir les caisses dans ton inventaire")
                 ).queue();
-                log.info("Commandes slash enregistrées pour le serveur: {}", guild.getName());
+                log.info("Commandes slash enregistrÃ©es pour le serveur: {}", guild.getName());
             }
 
-            log.info("Bot prêt!");
+            log.info("Bot prÃªt!");
 
-                        // Arrêter proprement à la fermeture
+                        // ArrÃªter proprement Ã  la fermeture
                         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                                log.info("Arrêt du bot en cours...");
+                                log.info("ArrÃªt du bot en cours...");
                                 randomMute.shutdown();
                                 ghostPing.shutdown();
                                 roulette.shutdown();
                                 voiceReward.shutdown();
                                 jda.shutdown();
-                                log.info("Bot arrêté.");
+                                log.info("Bot arrÃªtÃ©.");
                         }));
 
-            // Garder le bot en vie (bloque jusqu'à l'arrêt)
+            // Garder le bot en vie (bloque jusqu'Ã  l'arrÃªt)
             jda.awaitShutdown();
 
         } catch (Exception e) {
-            log.error("Erreur lors du démarrage du bot", e);
+            log.error("Erreur lors du dÃ©marrage du bot", e);
         }
     }
 }

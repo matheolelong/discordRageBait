@@ -7,6 +7,7 @@ import com.ragebait.QuiExclusionManager;
 import com.ragebait.RandomMuteManager;
 import com.ragebait.RouletteManager;
 import com.ragebait.StatusTrackerManager;
+import com.ragebait.cases.CaseCommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -25,6 +26,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SlashCommandListener extends ListenerAdapter {
+
+    /** Handler pour les commandes de caisses CS:GO-like */
+    private final CaseCommandHandler caseHandler = new CaseCommandHandler();
 
     private static final String[] RAGE_BAIT_MESSAGES = {
             "Je pense que les pizzas à l'ananas sont les meilleures 🍕🍍",
@@ -65,6 +69,11 @@ public class SlashCommandListener extends ListenerAdapter {
             case "roulette" -> handleRoulette(event);
             case "bet" -> handleBet(event);
             case "mybets" -> handleMyBets(event);
+            // Caisses CS:GO-like
+            case "cases" -> handleCases(event);
+            case "buycase" -> handleBuyCase(event);
+            case "opencase" -> handleOpenCase(event);
+            case "inventory" -> handleInventory(event);
             default -> event.reply("Commande inconnue!").setEphemeral(true).queue();
         }
     }
@@ -1062,5 +1071,47 @@ public class SlashCommandListener extends ListenerAdapter {
         
         String bets = roulette.getCurrentBets(event.getUser().getIdLong());
         event.reply(bets).setEphemeral(true).queue();
+    }
+
+    // ============ CASES COMMANDS ============
+
+    /** /cases - liste des caisses disponibles */
+    private void handleCases(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        caseHandler.handleListCases(event.getHook());
+    }
+
+    /** /buycase <casename> - acheter une caisse */
+    private void handleBuyCase(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        String caseName = event.getOption("casename").getAsString().trim().toLowerCase();
+        caseHandler.handleBuyCase(
+                event.getHook(),
+                event.getUser().getIdLong(),
+                event.getUser().getAsMention(),
+                caseName
+        );
+    }
+
+    /** /opencase <casename> - ouvrir une caisse avec animation */
+    private void handleOpenCase(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        String caseName = event.getOption("casename").getAsString().trim().toLowerCase();
+        caseHandler.handleOpenCase(
+                event.getHook(),
+                event.getUser().getIdLong(),
+                event.getUser().getAsMention(),
+                caseName
+        );
+    }
+
+    /** /inventory - inventaire des caisses du joueur */
+    private void handleInventory(SlashCommandInteractionEvent event) {
+        event.deferReply().queue();
+        caseHandler.handleInventory(
+                event.getHook(),
+                event.getUser().getIdLong(),
+                event.getUser().getName()
+        );
     }
 }

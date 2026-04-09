@@ -1,0 +1,150 @@
+{
+  "cases": [
+    {
+      "name": "alpha_case",
+      "price": 1000,
+      "weapons": [
+        {
+          "name": "AK-47 Redline",
+          "minPrice": 500,
+          "maxPrice": 1500,
+          "dropChance": 0.40,
+          "floatMin": 0.10,
+          "floatMax": 0.40
+        },
+        {
+          "name": "AWP Asiimov",
+          "minPrice": 2000,
+          "maxPrice": 6000,
+          "dropChance": 0.15,
+          "floatMin": 0.18,
+          "floatMax": 0.45
+        },
+        {
+          "name": "M4A4 Howl",
+          "minPrice": 3000,
+          "maxPrice": 8000,
+          "dropChance": 0.10,
+          "floatMin": 0.00,
+          "floatMax": 0.35
+        },
+        {
+          "name": "Glock-18 Fade",
+          "minPrice": 200,
+          "maxPrice": 800,
+          "dropChance": 0.25,
+          "floatMin": 0.00,
+          "floatMax": 0.08
+        },
+        {
+          "name": "Desert Eagle Blaze",
+          "minPrice": 800,
+          "maxPrice": 2500,
+          "dropChance": 0.10,
+          "floatMin": 0.00,
+          "floatMax": 0.08
+        }
+      ]
+    },
+    {
+      "name": "gamma_case",
+      "price": 2000,
+      "weapons": [
+        {
+          "name": "M4A1-S Hyper Beast",
+          "minPrice": 1000,
+          "maxPrice": 4000,
+          "dropChance": 0.35,
+          "floatMin": 0.00,
+          "floatMax": 0.50
+        },
+        {
+          "name": "P250 Undertow",
+          "minPrice": 100,
+          "maxPrice": 500,
+          "dropChance": 0.58,
+          "floatMin": 0.06,
+          "floatMax": 0.80
+        },
+        {
+          "name": "AWP Dragonlore",
+          "minPrice": 10000,
+          "maxPrice": 30000,
+          "dropChance": 0.02,
+          "floatMin": 0.00,
+          "floatMax": 0.07
+        },
+        {
+          "name": "Knife Doppler",
+          "minPrice": 15000,
+          "maxPrice": 40000,
+          "dropChance": 0.05,
+          "floatMin": 0.00,
+          "floatMax": 0.08
+        }
+      ]
+    },
+    {
+      "name": "operation_case",
+      "price": 5000,
+      "weapons": [
+        {
+          "name": "USP-S Kill Confirmed",
+          "minPrice": 2000,
+          "maxPrice": 7000,
+          "dropChance": 0.20,
+          "floatMin": 0.00,
+          "floatMax": 0.40
+        },
+        {
+          "name": "AK-47 Fire Serpent",
+          "minPrice": 8000,
+          "maxPrice": 20000,
+          "dropChance": 0.08,
+          "floatMin": 0.00,
+          "floatMax": 0.38
+        },
+        {
+          "name": "M4A4 Poseidon",
+          "minPrice": 3000,
+          "maxPrice": 9000,
+          "dropChance": 0.12,
+          "floatMin": 0.00,
+          "floatMax": 0.45
+        },
+        {
+          "name": "AWP Electric Hive",
+          "minPrice": 1500,
+          "maxPrice": 5000,
+          "dropChance": 0.20,
+          "floatMin": 0.00,
+          "floatMax": 0.50
+        },
+        {
+          "name": "Karambit Fade",
+          "minPrice": 25000,
+          "maxPrice": 60000,
+          "dropChance": 0.025,
+          "floatMin": 0.00,
+          "floatMax": 0.08
+        },
+        {
+          "name": "Butterfly Knife Tiger Tooth",
+          "minPrice": 20000,
+          "maxPrice": 50000,
+          "dropChance": 0.025,
+          "floatMin": 0.00,
+          "floatMax": 0.08
+        },
+        {
+          "name": "P90 Death Grip",
+          "minPrice": 200,
+          "maxPrice": 800,
+          "dropChance": 0.35,
+          "floatMin": 0.06,
+          "floatMax": 0.80
+        }
+      ]
+    }
+  ]
+}

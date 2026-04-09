@@ -41,6 +41,22 @@ CREATE TABLE IF NOT EXISTS status_tracker (
 );
 
 -- ============================================================
+--  Système de caisses (CS:GO-like)
+-- ============================================================
+
+-- Inventaire des caisses par joueur
+-- case_name correspond aux noms définis dans cases/cases.json
+CREATE TABLE IF NOT EXISTS case_inventory (
+    user_id   BIGINT      NOT NULL,
+    case_name VARCHAR(64) NOT NULL,
+    quantity  INT         NOT NULL DEFAULT 1 CHECK (quantity >= 0),
+    PRIMARY KEY (user_id, case_name)
+);
+
+-- Index pour accélérer les requêtes par joueur
+CREATE INDEX IF NOT EXISTS idx_case_inventory_user ON case_inventory (user_id);
+
+-- ============================================================
 --  Données initiales optionnelles (décommente si besoin)
 -- ============================================================
 -- INSERT INTO config_settings (key, value) VALUES ('interval', '300') ON CONFLICT DO NOTHING;

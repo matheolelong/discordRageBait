@@ -33,54 +33,53 @@ import java.util.*;
  * }
  * </pre>
  *
- * <p>Le parsing est fait manuellement (sans bibliothèque externe) pour rester
- * cohérent avec le projet qui n'a pas de dépendance JSON.</p>
+ * <p>Le parsing est fait manuellement (sans bibliotheque externe) pour rester
+ * coherent avec le projet qui n'a pas de dependance JSON.</p>
  */
 public class CaseLoader {
 
     private static final Logger log = LoggerFactory.getLogger(CaseLoader.class);
 
-    /** Chemin du dossier cases relatif au répertoire d'exécution */
+    /** Chemin du dossier cases relatif au repertoire d'execution */
     private static final String CASES_DIR  = "cases";
 
     /** Chemin du fichier de configuration des caisses */
     private static final String CASES_FILE = CASES_DIR + "/cases.json";
 
     /**
-     * Crée le dossier {@code cases/} s'il n'existe pas, puis charge les caisses
-     * depuis {@code cases/cases.json}.
+     * Cree le dossier {@code cases/} et le fichier {@code cases.json} s'ils n'existent pas,
+     * puis charge les caisses.
      *
-     * <p>Si le fichier n'existe pas encore, un fichier d'exemple est créé
-     * automatiquement pour guider l'utilisateur.</p>
+     * <p>Si le fichier n'existait pas, un fichier avec des caisses de demonstration est
+     * cree automatiquement et charge immediatement - le bot est pret sans intervention.</p>
      *
-     * @return liste des caisses chargées (jamais null, éventuellement vide)
+     * @return liste des caisses chargees (jamais null, eventuellement vide)
      */
     public List<Case> loadCases() {
-        // 1. Créer le dossier si besoin
+        // 1. Creer le dossier si besoin
         Path dir = Paths.get(CASES_DIR);
         if (!Files.exists(dir)) {
             try {
                 Files.createDirectories(dir);
-                log.info("[CaseLoader] Dossier '{}' créé.", CASES_DIR);
+                log.info("[CaseLoader] Dossier '{}' cree.", CASES_DIR);
             } catch (IOException e) {
-                log.error("[CaseLoader] Impossible de créer le dossier '{}'.", CASES_DIR, e);
+                log.error("[CaseLoader] Impossible de creer le dossier '{}'.", CASES_DIR, e);
                 return Collections.emptyList();
             }
         }
 
-        // 2. Créer un fichier exemple si le fichier n'existe pas
+        // 2. Creer un fichier avec les caisses de demo si absent, puis charger quand meme
         Path file = Paths.get(CASES_FILE);
         if (!Files.exists(file)) {
             createExampleFile(file);
-            log.warn("[CaseLoader] Fichier '{}' créé avec un exemple. Modifiez-le puis redémarrez.", CASES_FILE);
-            return Collections.emptyList();
+            log.info("[CaseLoader] Fichier '{}' cree avec les caisses de demonstration.", CASES_FILE);
         }
 
         // 3. Lire et parser le fichier
         try {
             String json = Files.readString(file, StandardCharsets.UTF_8);
             List<Case> cases = parseJson(json);
-            log.info("[CaseLoader] {} caisse(s) chargée(s) depuis '{}'.", cases.size(), CASES_FILE);
+            log.info("[CaseLoader] {} caisse(s) chargee(s) depuis '{}'.", cases.size(), CASES_FILE);
             return cases;
         } catch (IOException e) {
             log.error("[CaseLoader] Erreur de lecture du fichier '{}'.", CASES_FILE, e);
@@ -89,12 +88,12 @@ public class CaseLoader {
     }
 
     // =========================================================================
-    // Parser JSON minimaliste (sans dépendance externe)
+    // Parser JSON minimaliste (sans dependance externe)
     // =========================================================================
 
     /**
-     * Parse le JSON des caisses de manière légère, sans librairie externe.
-     * Gère les cas d'erreur courants avec des messages clairs dans les logs.
+     * Parse le JSON des caisses de maniere legere, sans librairie externe.
+     * Gere les cas d'erreur courants avec des messages clairs dans les logs.
      */
     private List<Case> parseJson(String json) {
         List<Case> result = new ArrayList<>();
@@ -102,37 +101,37 @@ public class CaseLoader {
             // Extraire le tableau "cases": [ ... ]
             String casesArray = extractArrayContent(json, "\"cases\"");
             if (casesArray == null) {
-                log.error("[CaseLoader] Clé 'cases' introuvable dans le JSON.");
+                log.error("[CaseLoader] Cle 'cases' introuvable dans le JSON.");
                 return result;
             }
 
-            // Découper en objets individuels
+            // Decouper en objets individuels
             List<String> caseObjects = splitJsonObjects(casesArray);
             for (String caseObj : caseObjects) {
                 try {
                     Case c = parseCase(caseObj);
                     if (c != null) {
                         result.add(c);
-                        log.debug("[CaseLoader] Caisse chargée : {}", c);
+                        log.debug("[CaseLoader] Caisse chargee : {}", c);
                     }
                 } catch (Exception e) {
                     log.error("[CaseLoader] Erreur parsing d'une caisse : {}", caseObj, e);
                 }
             }
         } catch (Exception e) {
-            log.error("[CaseLoader] Erreur générale lors du parsing JSON.", e);
+            log.error("[CaseLoader] Erreur generale lors du parsing JSON.", e);
         }
         return result;
     }
 
-    /** Parse un objet JSON représentant une caisse. */
+    /** Parse un objet JSON representant une caisse. */
     private Case parseCase(String json) {
         String name    = extractString(json, "\"name\"");
         long   price   = extractLong(json, "\"price\"");
 
         String weaponsArray = extractArrayContent(json, "\"weapons\"");
         if (name == null || weaponsArray == null) {
-            log.warn("[CaseLoader] Caisse ignorée (name ou weapons manquant) : {}", json);
+            log.warn("[CaseLoader] Caisse ignoree (name ou weapons manquant) : {}", json);
             return null;
         }
 
@@ -147,14 +146,14 @@ public class CaseLoader {
         }
 
         if (weapons.isEmpty()) {
-            log.warn("[CaseLoader] Caisse '{}' ignorée : aucune arme valide.", name);
+            log.warn("[CaseLoader] Caisse '{}' ignoree : aucune arme valide.", name);
             return null;
         }
 
         return new Case(name, price, weapons);
     }
 
-    /** Parse un objet JSON représentant une arme. */
+    /** Parse un objet JSON representant une arme. */
     private Weapon parseWeapon(String json) {
         String name       = extractString(json, "\"name\"");
         long   minPrice   = extractLong(json, "\"minPrice\"");
@@ -164,7 +163,7 @@ public class CaseLoader {
         double floatMax   = extractDouble(json, "\"floatMax\"");
 
         if (name == null) {
-            log.warn("[CaseLoader] Arme ignorée (name manquant) : {}", json);
+            log.warn("[CaseLoader] Arme ignoree (name manquant) : {}", json);
             return null;
         }
 
@@ -175,10 +174,6 @@ public class CaseLoader {
     // Utilitaires de parsing JSON minimaliste
     // =========================================================================
 
-    /**
-     * Extrait la valeur d'un champ string : "key": "valeur"
-     * Retourne null si non trouvé.
-     */
     private String extractString(String json, String key) {
         int keyIdx = json.indexOf(key);
         if (keyIdx == -1) return null;
@@ -191,10 +186,6 @@ public class CaseLoader {
         return json.substring(startQuote + 1, endQuote);
     }
 
-    /**
-     * Extrait la valeur d'un champ numérique entier : "key": 123
-     * Retourne 0 si non trouvé.
-     */
     private long extractLong(String json, String key) {
         int keyIdx = json.indexOf(key);
         if (keyIdx == -1) return 0;
@@ -211,10 +202,6 @@ public class CaseLoader {
         catch (NumberFormatException e) { return 0; }
     }
 
-    /**
-     * Extrait la valeur d'un champ numérique décimal : "key": 0.25
-     * Retourne 0.0 si non trouvé.
-     */
     private double extractDouble(String json, String key) {
         int keyIdx = json.indexOf(key);
         if (keyIdx == -1) return 0.0;
@@ -231,16 +218,11 @@ public class CaseLoader {
         catch (NumberFormatException e) { return 0.0; }
     }
 
-    /**
-     * Extrait le contenu d'un tableau JSON associé à une clé.
-     * ex: { "weapons": [ ... ] } → retourne "[ ... ]" puis le contenu entre crochets.
-     */
     private String extractArrayContent(String json, String key) {
         int keyIdx = json.indexOf(key);
         if (keyIdx == -1) return null;
         int bracketOpen = json.indexOf('[', keyIdx + key.length());
         if (bracketOpen == -1) return null;
-        // Trouver le crochet fermant correspondant (avec profondeur)
         int depth = 0;
         for (int i = bracketOpen; i < json.length(); i++) {
             if (json.charAt(i) == '[') depth++;
@@ -252,10 +234,6 @@ public class CaseLoader {
         return null;
     }
 
-    /**
-     * Découpe un tableau JSON (sans les crochets extérieurs) en objets individuels
-     * en respectant la profondeur des accolades imbriquées.
-     */
     private List<String> splitJsonObjects(String content) {
         List<String> objects = new ArrayList<>();
         int depth = 0;
@@ -277,105 +255,141 @@ public class CaseLoader {
     }
 
     // =========================================================================
-    // Génération du fichier d'exemple
+    // Generation du fichier d'exemple
     // =========================================================================
 
-    /** Crée un fichier {@code cases.json} d'exemple avec deux caisses de démonstration. */
+    /** Cree un fichier {@code cases.json} avec des caisses de demonstration. */
     private void createExampleFile(Path file) {
-        String example = """
-                {
-                  "cases": [
-                    {
-                      "name": "alpha_case",
-                      "price": 1000,
-                      "weapons": [
-                        {
-                          "name": "AK-47 Redline",
-                          "minPrice": 500,
-                          "maxPrice": 1500,
-                          "dropChance": 0.40,
-                          "floatMin": 0.10,
-                          "floatMax": 0.40
-                        },
-                        {
-                          "name": "M4A4 Howl",
-                          "minPrice": 3000,
-                          "maxPrice": 8000,
-                          "dropChance": 0.10,
-                          "floatMin": 0.00,
-                          "floatMax": 0.35
-                        },
-                        {
-                          "name": "AWP Asiimov",
-                          "minPrice": 2000,
-                          "maxPrice": 6000,
-                          "dropChance": 0.15,
-                          "floatMin": 0.18,
-                          "floatMax": 0.45
-                        },
-                        {
-                          "name": "Glock-18 Fade",
-                          "minPrice": 200,
-                          "maxPrice": 800,
-                          "dropChance": 0.25,
-                          "floatMin": 0.00,
-                          "floatMax": 0.08
-                        },
-                        {
-                          "name": "Desert Eagle Blaze",
-                          "minPrice": 800,
-                          "maxPrice": 2500,
-                          "dropChance": 0.10,
-                          "floatMin": 0.00,
-                          "floatMax": 0.08
-                        }
-                      ]
-                    },
-                    {
-                      "name": "gamma_case",
-                      "price": 2000,
-                      "weapons": [
-                        {
-                          "name": "M4A1-S Hyper Beast",
-                          "minPrice": 1000,
-                          "maxPrice": 4000,
-                          "dropChance": 0.35,
-                          "floatMin": 0.00,
-                          "floatMax": 0.50
-                        },
-                        {
-                          "name": "Knife Doppler",
-                          "minPrice": 15000,
-                          "maxPrice": 40000,
-                          "dropChance": 0.05,
-                          "floatMin": 0.00,
-                          "floatMax": 0.08
-                        },
-                        {
-                          "name": "AWP Dragonlore",
-                          "minPrice": 10000,
-                          "maxPrice": 30000,
-                          "dropChance": 0.02,
-                          "floatMin": 0.00,
-                          "floatMax": 0.07
-                        },
-                        {
-                          "name": "P250 Undertow",
-                          "minPrice": 100,
-                          "maxPrice": 500,
-                          "dropChance": 0.58,
-                          "floatMin": 0.06,
-                          "floatMax": 0.80
-                        }
-                      ]
-                    }
-                  ]
-                }
-                """;
+        String example = "{\n"
+            + "  \"cases\": [\n"
+            + "    {\n"
+            + "      \"name\": \"alpha_case\",\n"
+            + "      \"price\": 1000,\n"
+            + "      \"weapons\": [\n"
+            + "        {\n"
+            + "          \"name\": \"AK-47 Redline\",\n"
+            + "          \"minPrice\": 500,\n"
+            + "          \"maxPrice\": 1500,\n"
+            + "          \"dropChance\": 0.40,\n"
+            + "          \"floatMin\": 0.10,\n"
+            + "          \"floatMax\": 0.40\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"AWP Asiimov\",\n"
+            + "          \"minPrice\": 2000,\n"
+            + "          \"maxPrice\": 6000,\n"
+            + "          \"dropChance\": 0.15,\n"
+            + "          \"floatMin\": 0.18,\n"
+            + "          \"floatMax\": 0.45\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"M4A4 Howl\",\n"
+            + "          \"minPrice\": 3000,\n"
+            + "          \"maxPrice\": 8000,\n"
+            + "          \"dropChance\": 0.10,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.35\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"Glock-18 Fade\",\n"
+            + "          \"minPrice\": 200,\n"
+            + "          \"maxPrice\": 800,\n"
+            + "          \"dropChance\": 0.25,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.08\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"Desert Eagle Blaze\",\n"
+            + "          \"minPrice\": 800,\n"
+            + "          \"maxPrice\": 2500,\n"
+            + "          \"dropChance\": 0.10,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.08\n"
+            + "        }\n"
+            + "      ]\n"
+            + "    },\n"
+            + "    {\n"
+            + "      \"name\": \"gamma_case\",\n"
+            + "      \"price\": 2000,\n"
+            + "      \"weapons\": [\n"
+            + "        {\n"
+            + "          \"name\": \"M4A1-S Hyper Beast\",\n"
+            + "          \"minPrice\": 1000,\n"
+            + "          \"maxPrice\": 4000,\n"
+            + "          \"dropChance\": 0.35,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.50\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"P250 Undertow\",\n"
+            + "          \"minPrice\": 100,\n"
+            + "          \"maxPrice\": 500,\n"
+            + "          \"dropChance\": 0.58,\n"
+            + "          \"floatMin\": 0.06,\n"
+            + "          \"floatMax\": 0.80\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"AWP Dragonlore\",\n"
+            + "          \"minPrice\": 10000,\n"
+            + "          \"maxPrice\": 30000,\n"
+            + "          \"dropChance\": 0.02,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.07\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"Knife Doppler\",\n"
+            + "          \"minPrice\": 15000,\n"
+            + "          \"maxPrice\": 40000,\n"
+            + "          \"dropChance\": 0.05,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.08\n"
+            + "        }\n"
+            + "      ]\n"
+            + "    },\n"
+            + "    {\n"
+            + "      \"name\": \"operation_case\",\n"
+            + "      \"price\": 5000,\n"
+            + "      \"weapons\": [\n"
+            + "        {\n"
+            + "          \"name\": \"USP-S Kill Confirmed\",\n"
+            + "          \"minPrice\": 2000,\n"
+            + "          \"maxPrice\": 7000,\n"
+            + "          \"dropChance\": 0.20,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.40\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"AK-47 Fire Serpent\",\n"
+            + "          \"minPrice\": 8000,\n"
+            + "          \"maxPrice\": 20000,\n"
+            + "          \"dropChance\": 0.08,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.38\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"Karambit Fade\",\n"
+            + "          \"minPrice\": 25000,\n"
+            + "          \"maxPrice\": 60000,\n"
+            + "          \"dropChance\": 0.025,\n"
+            + "          \"floatMin\": 0.00,\n"
+            + "          \"floatMax\": 0.08\n"
+            + "        },\n"
+            + "        {\n"
+            + "          \"name\": \"P90 Death Grip\",\n"
+            + "          \"minPrice\": 200,\n"
+            + "          \"maxPrice\": 800,\n"
+            + "          \"dropChance\": 0.695,\n"
+            + "          \"floatMin\": 0.06,\n"
+            + "          \"floatMax\": 0.80\n"
+            + "        }\n"
+            + "      ]\n"
+            + "    }\n"
+            + "  ]\n"
+            + "}\n";
         try {
             Files.writeString(file, example, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            log.error("[CaseLoader] Impossible de créer le fichier d'exemple '{}'.", CASES_FILE, e);
+            log.error("[CaseLoader] Impossible de creer le fichier d'exemple '{}'.", CASES_FILE, e);
         }
     }
 }

@@ -7,10 +7,13 @@ Un bot Discord en Java utilisant JDA (Java Discord API) pour faire rager tes pot
 - **Ghost Ping** - Envoie des pings fantômes qui sont supprimés instantanément
 - **Random Mute** - Mute/deafen aléatoirement une personne en vocal
 - **Status Tracker** - Surveille et enregistre les changements de statut personnalisé d'un utilisateur
+- **Casino** - Économie virtuelle avec slots, coinflip, blackjack et roulette
+- **Caisses CS:GO** - Ouvre des caisses pour obtenir des armes avec float et qualité
 
 ## Prérequis
 
 - Java 17 ou supérieur
+- PostgreSQL
 - Un compte Discord Developer et un token de bot
 
 ## Configuration
@@ -42,14 +45,48 @@ $env:DISCORD_TOKEN = "ton_token_ici"
 java -jar target\discord-rage-bait-1.0-SNAPSHOT.jar
 ```
 
-### Option 2 : Fichier config.txt
-Ajoute `token=TON_TOKEN` dans `config.txt` puis :
-```powershell
-.\mvnw.cmd clean package -DskipTests
-java -jar target\discord-rage-bait-1.0-SNAPSHOT.jar
+### Option 2 : Docker Compose
+```yaml
+# docker-compose.yml
+services:
+  bot:
+    build: .
+    environment:
+      DISCORD_TOKEN: ton_token
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ragebait
+      DB_USER: postgres
+      DB_PASSWORD: secret
+    volumes:
+      - ./cases:/app/cases   # dossier des caisses
 ```
 
 ## Commandes disponibles
+
+### 🎁 Caisses (CS:GO-like)
+Système de caisses avec drops pondérés, float, qualité et prix dynamique.
+
+| Commande | Description |
+|----------|-------------|
+| `/cases` | Liste toutes les caisses disponibles avec leur prix |
+| `/buycase <nom>` | Achète une caisse (déduit les coins de ton solde) |
+| `/opencase <nom>` | Ouvre une caisse de ton inventaire avec animation |
+| `/inventory` | Voir les caisses que tu possèdes |
+
+**Qualités (selon le float) :**
+| Float | Qualité |
+|-------|---------|
+| 0.00 – 0.07 | ✨ Factory New |
+| 0.07 – 0.15 | 🟢 Minimal Wear |
+| 0.15 – 0.38 | 🔵 Field-Tested |
+| 0.38 – 0.45 | 🟡 Well-Worn |
+| 0.45 – 1.00 | 🔴 Battle-Scarred |
+
+**Configuration des caisses :** édite `cases/cases.json` (créé automatiquement au premier démarrage).
+Un float proche de `floatMin` → prix proche de `maxPrice`, et inversement.
+
+---
 
 ### Ghost Ping 👻
 | Commande | Description |
@@ -111,6 +148,16 @@ Système d'économie virtuelle avec plusieurs jeux!
 - 🍇🍇🍇 = x4 | 7️⃣7️⃣7️⃣ = x7 | 💎💎💎 = x10 | 🎰🎰🎰 = x15
 - 2 symboles identiques = x1.5
 
+### Roulette 🎡
+| Commande | Description |
+|----------|-------------|
+| `/roulette start [#salon]` | Démarre la roulette dans un salon |
+| `/roulette stop` | Arrête la roulette |
+| `/roulette status` | Affiche le statut |
+| `/roulette delay secondes:<n>` | Change le délai entre les tours (min 10s) |
+| `/bet <montant> <type>` | Place un pari (rouge/noir/pair/impair/0-36) |
+| `/mybets` | Voir tes paris en cours |
+
 ### Autres
 | Commande | Description |
 |----------|-------------|
@@ -124,26 +171,41 @@ Le bot envoie un message (ou un ping si une cible est définie) dans un salon al
 
 ## Sauvegarde automatique
 
-La configuration ghost ping (salons, cible, intervalle) est automatiquement sauvegardée dans `config.txt` et rechargée au redémarrage du bot.
+La configuration ghost ping (salons, cible, intervalle) est automatiquement sauvegardée dans la base de données et rechargée au redémarrage du bot.
 
 ## Structure du projet
 
 ```
 src/main/java/com/ragebait/
 ├── Main.java                    # Point d'entrée du bot
+├── CasinoManager.java           # Gère l'économie virtuelle
 ├── GhostPingManager.java        # Gère les ghost pings automatiques
 ├── RandomMuteManager.java       # Gère les mutes aléatoires
+├── RouletteManager.java         # Gère la roulette
 ├── StatusTrackerManager.java    # Gère la surveillance des statuts
 ├── ConfigManager.java           # Sauvegarde/chargement de la config
+├── DatabaseManager.java         # Connexion PostgreSQL
+├── cases/
+│   ├── Case.java                # Modèle d'une caisse
+│   ├── Weapon.java              # Modèle d'une arme
+│   ├── CaseLoader.java          # Parse cases/cases.json
+│   ├── CaseManager.java         # Singleton : chargement + inventaire BDD
+│   ├── CaseCommandHandler.java  # Logique des commandes /buycase /opencase
+│   ├── DropSystem.java          # Tirage pondéré par dropChance
+│   └── FloatCalculator.java     # Calcul float, qualité et prix
 └── listeners/
     ├── MessageListener.java     # Gère les messages textuels
     ├── SlashCommandListener.java # Gère les commandes slash
     └── PresenceListener.java    # Gère les événements de présence
+
+cases/
+└── cases.json                   # Config des caisses (créé automatiquement)
 ```
 
 ## Technologies utilisées
 
 - [JDA 5](https://github.com/discord-jda/JDA) - Java Discord API
+- [PostgreSQL](https://www.postgresql.org/) - Base de données
 - [Maven Wrapper](https://maven.apache.org/wrapper/) - Pas besoin d'installer Maven
 
 ## License
