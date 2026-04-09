@@ -1,4 +1,4 @@
-﻿package com.ragebait;
+package com.ragebait;
 
 import com.ragebait.listeners.MessageListener;
 import com.ragebait.listeners.PresenceListener;
