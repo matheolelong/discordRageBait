@@ -3,6 +3,7 @@ package com.ragebait;
 import com.ragebait.listeners.MessageListener;
 import com.ragebait.listeners.PresenceListener;
 import com.ragebait.listeners.SlashCommandListener;
+import com.ragebait.cases.CaseManager;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
@@ -82,6 +83,10 @@ public class Main {
 
             // Initialiser le CasinoManager (données directement dans PostgreSQL)
             CasinoManager.getInstance();
+
+            // Initialiser le CaseManager (charge cases/cases.json + crée la table d'inventaire)
+            CaseManager.getInstance();
+            log.info("Système de caisses initialisé.");
 
             // Initialiser le RouletteManager
             RouletteManager roulette = RouletteManager.getInstance();

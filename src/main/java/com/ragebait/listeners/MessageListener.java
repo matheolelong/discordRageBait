@@ -1,6 +1,7 @@
 package com.ragebait.listeners;
 
 import com.ragebait.QuiExclusionManager;
+import com.ragebait.cases.CaseCommandHandler;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
@@ -11,10 +12,18 @@ public class MessageListener extends ListenerAdapter {
     // Pattern pour détecter "qui" comme mot isolé (pas dans "quiche", "équipe", etc.)
     private static final Pattern QUI_PATTERN = Pattern.compile("\\bqui\\b", Pattern.CASE_INSENSITIVE);
 
+    /** Handler pour les commandes !buycase, !opencase, !cases, !inventory */
+    private final CaseCommandHandler caseHandler = new CaseCommandHandler();
+
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         // Ignorer les messages du bot lui-même
         if (event.getAuthor().isBot()) {
+            return;
+        }
+
+        // Commandes de caisse (priorité haute : !buycase, !opencase, !cases, !inventory)
+        if (caseHandler.handle(event)) {
             return;
         }
 
