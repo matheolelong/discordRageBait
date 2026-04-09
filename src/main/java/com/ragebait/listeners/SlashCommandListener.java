@@ -142,9 +142,9 @@ public class SlashCommandListener extends ListenerAdapter {
                 .setColor(Color.ORANGE)
                 .setThumbnail(event.getUser().getEffectiveAvatarUrl())
                 .addField("\uD83D\uDCB0 Ton casino",
-                        "Solde : **" + balance + "** \uD83E\uDE™\n" +
+                        "Solde : **" + balance + "** \uD83E\uDE99\n" +
                         "Caisses : **" + caseCount + "**\n" +
-                        "Armes : **" + weapons.size() + "** (valeur : **" + weaponValue + "** \uD83E\uDE™)", false)
+                        "Armes : **" + weapons.size() + "** (valeur : **" + weaponValue + "** \uD83E\uDE99)", false)
                 .addField("\uD83D\uDC7B Ghost Ping",
                         "/ghostping start/stop/status\n/settarget @user\n/addchannel #salon\n/setinterval <min> [sec]", false)
                 .addField("\uD83D\uDD07 Random Mute",
