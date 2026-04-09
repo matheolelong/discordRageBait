@@ -196,7 +196,7 @@ public class CaseManager {
     public List<WeaponDrop> getWeaponInventory(long userId) {
         List<WeaponDrop> drops = new ArrayList<>();
         String sql = """
-                SELECT id, user_id, weapon_name, case_name, quality, float_value, price
+                SELECT id, user_id, weapon_name, case_name, quality, float_value, price, locked
                 FROM weapon_inventory
                 WHERE user_id = ?
                 ORDER BY price DESC, id ASC
@@ -224,7 +224,7 @@ public class CaseManager {
      */
     public WeaponDrop getWeaponById(int weaponId, long userId) {
         String sql = """
-                SELECT id, user_id, weapon_name, case_name, quality, float_value, price
+                SELECT id, user_id, weapon_name, case_name, quality, float_value, price, locked
                 FROM weapon_inventory
                 WHERE id = ? AND user_id = ?
                 """;
@@ -269,8 +269,55 @@ public class CaseManager {
                 rs.getString("case_name"),
                 rs.getString("quality"),
                 rs.getDouble("float_value"),
-                rs.getLong("price")
+                rs.getLong("price"),
+                rs.getBoolean("locked")
         );
+    }
+
+    /**
+     * Retourne uniquement les armes NON verrouillee d'un joueur (pour le Sell All).
+     */
+    public List<WeaponDrop> getUnlockedWeaponInventory(long userId) {
+        List<WeaponDrop> drops = new ArrayList<>();
+        String sql = """
+                SELECT id, user_id, weapon_name, case_name, quality, float_value, price, locked
+                FROM weapon_inventory
+                WHERE user_id = ? AND locked = FALSE
+                ORDER BY price DESC, id ASC
+                """;
+        try (Connection conn = db().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) drops.add(mapWeaponDrop(rs));
+            }
+        } catch (SQLException e) {
+            log.error("[CaseManager] Erreur getUnlockedWeaponInventory userId={}", userId, e);
+        }
+        return drops;
+    }
+
+    /**
+     * Verrouille ou deverrouille une arme.
+     * Verifie que l'arme appartient bien au joueur avant modification.
+     *
+     * @param weaponId ID de l'arme
+     * @param userId   ID Discord du joueur (securite)
+     * @param locked   true pour verrouiller, false pour deverrouiller
+     * @return true si l'arme a ete mise a jour, false si inexistante ou non autorisee
+     */
+    public boolean setWeaponLocked(int weaponId, long userId, boolean locked) {
+        String sql = "UPDATE weapon_inventory SET locked = ? WHERE id = ? AND user_id = ?";
+        try (Connection conn = db().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setBoolean(1, locked);
+            ps.setInt(2, weaponId);
+            ps.setLong(3, userId);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            log.error("[CaseManager] Erreur setWeaponLocked id={} userId={} locked={}", weaponId, userId, locked, e);
+            return false;
+        }
     }
 
     // =========================================================================
@@ -295,7 +342,8 @@ public class CaseManager {
                     case_name   VARCHAR(64)      NOT NULL,
                     quality     VARCHAR(32)      NOT NULL,
                     float_value DOUBLE PRECISION NOT NULL,
-                    price       BIGINT          NOT NULL
+                    price       BIGINT          NOT NULL,
+                    locked      BOOLEAN         NOT NULL DEFAULT FALSE
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_weapon_inventory_user ON weapon_inventory (user_id);
@@ -303,6 +351,8 @@ public class CaseManager {
         try (Connection conn = db().getConnection();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
+            // Migration : ajoute la colonne locked si elle n'existe pas encore (installations existantes)
+            stmt.execute("ALTER TABLE weapon_inventory ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT FALSE");
             log.info("[CaseManager] Tables 'case_inventory' et 'weapon_inventory' initialisees.");
         } catch (SQLException e) {
             log.error("[CaseManager] Erreur initialisation tables.", e);

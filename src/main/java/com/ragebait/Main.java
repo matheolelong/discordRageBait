@@ -159,7 +159,11 @@ public class Main {
                                 .addOption(OptionType.USER, "user", "Voir l'inventaire d'un autre joueur", false),
                         Commands.slash("weapons", "Voir les armes dans ton inventaire"),
                         Commands.slash("sell", "Vendre une arme de ton inventaire")
-                                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme (visible dans /weapons)", true)
+                                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme (visible dans /weapons)", true),
+                        Commands.slash("lock", "Verrouiller une arme (protege du Sell All)")
+                                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme a verrouiller", true),
+                        Commands.slash("unlock", "Deverrouiller une arme")
+                                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme a deverrouiller", true)
                 ).queue();
                 log.info("Commandes slash enregistrÃ©es pour le serveur: {}", guild.getName());
             }

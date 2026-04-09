@@ -57,6 +57,7 @@ CREATE INDEX IF NOT EXISTS idx_case_inventory_user ON case_inventory (user_id);
 
 -- Inventaire des armes droppees par joueur
 -- Chaque ouverture de caisse stocke l'arme obtenue ici
+-- locked = true : arme protegee contre Sell All
 CREATE TABLE IF NOT EXISTS weapon_inventory (
     id           SERIAL           PRIMARY KEY,
     user_id      BIGINT           NOT NULL,
@@ -64,10 +65,14 @@ CREATE TABLE IF NOT EXISTS weapon_inventory (
     case_name    VARCHAR(64)      NOT NULL,
     quality      VARCHAR(32)      NOT NULL,
     float_value  DOUBLE PRECISION NOT NULL,
-    price        BIGINT           NOT NULL
+    price        BIGINT           NOT NULL,
+    locked       BOOLEAN          NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX IF NOT EXISTS idx_weapon_inventory_user ON weapon_inventory (user_id);
+
+-- Migration : ajoute locked si installation existante
+ALTER TABLE weapon_inventory ADD COLUMN IF NOT EXISTS locked BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- ============================================================
 --  Donnees initiales optionnelles (decommente si besoin)

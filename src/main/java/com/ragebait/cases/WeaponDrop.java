@@ -5,6 +5,8 @@ package com.ragebait.cases;
  *
  * <p>Chaque instance correspond a une ligne dans la table {@code weapon_inventory}.
  * Les armes sont identifiees par un {@code id} genere par la BDD (SERIAL).</p>
+ *
+ * <p>Le champ {@code locked} indique si l'arme est protegee contre la vente groupee.</p>
  */
 public class WeaponDrop {
 
@@ -29,8 +31,14 @@ public class WeaponDrop {
     /** Prix de vente en coins */
     private final long price;
 
+    /**
+     * Si true, l'arme est verrouillee :
+     * elle n'apparait pas dans le Sell All et ne peut etre vendue qu'individuellement via /sell.
+     */
+    private final boolean locked;
+
     public WeaponDrop(int id, long userId, String weaponName, String caseName,
-                      String quality, double floatValue, long price) {
+                      String quality, double floatValue, long price, boolean locked) {
         this.id         = id;
         this.userId     = userId;
         this.weaponName = weaponName;
@@ -38,13 +46,16 @@ public class WeaponDrop {
         this.quality    = quality;
         this.floatValue = floatValue;
         this.price      = price;
+        this.locked     = locked;
     }
 
-    public int    getId()         { return id;         }
-    public long   getUserId()     { return userId;     }
-    public String getWeaponName() { return weaponName; }
-    public String getCaseName()   { return caseName;   }
-    public String getQuality()    { return quality;    }
-    public double getFloatValue() { return floatValue; }
-    public long   getPrice()      { return price;      }
+    public int     getId()         { return id;         }
+    public long    getUserId()     { return userId;     }
+    public String  getWeaponName() { return weaponName; }
+    public String  getCaseName()   { return caseName;   }
+    public String  getQuality()    { return quality;    }
+    public double  getFloatValue() { return floatValue; }
+    public long    getPrice()      { return price;      }
+    public boolean isLocked()      { return locked;     }
 }
+

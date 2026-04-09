@@ -82,6 +82,8 @@ public class SlashCommandListener extends ListenerAdapter {
             case "inventory" -> handleInventory(event);
             case "weapons" -> handleWeapons(event);
             case "sell" -> handleSell(event);
+            case "lock" -> handleLock(event);
+            case "unlock" -> handleUnlock(event);
             default -> event.reply("Commande inconnue!").setEphemeral(true).queue();
         }
     }
@@ -1138,6 +1140,32 @@ public class SlashCommandListener extends ListenerAdapter {
                 event.getUser().getIdLong(),
                 weaponId
         );
+    }
+
+    /** /lock id:<n> - verrouille une arme pour la proteger de Sell All */
+    private void handleLock(SlashCommandInteractionEvent event) {
+        event.deferReply().setEphemeral(true).queue();
+        int weaponId = event.getOption("id").getAsInt();
+        long userId = event.getUser().getIdLong();
+        boolean updated = com.ragebait.cases.CaseManager.getInstance().setWeaponLocked(weaponId, userId, true);
+        if (!updated) {
+            event.getHook().sendMessage("❌ Arme **#" + weaponId + "** introuvable ou ne t'appartient pas.").queue();
+        } else {
+            event.getHook().sendMessage("🔒 Arme **#" + weaponId + "** verrouillee ! Elle ne sera pas vendue par **Sell All**.").queue();
+        }
+    }
+
+    /** /unlock id:<n> - deverrouille une arme pour pouvoir la vendre */
+    private void handleUnlock(SlashCommandInteractionEvent event) {
+        event.deferReply().setEphemeral(true).queue();
+        int weaponId = event.getOption("id").getAsInt();
+        long userId = event.getUser().getIdLong();
+        boolean updated = com.ragebait.cases.CaseManager.getInstance().setWeaponLocked(weaponId, userId, false);
+        if (!updated) {
+            event.getHook().sendMessage("❌ Arme **#" + weaponId + "** introuvable ou ne t'appartient pas.").queue();
+        } else {
+            event.getHook().sendMessage("🔓 Arme **#" + weaponId + "** deverrouillee ! Elle peut maintenant etre vendue.").queue();
+        }
     }
 }
 

@@ -81,7 +81,9 @@ public class InventoryUI {
                 if (shown++ >= 5) { sb.append("*... → Onglet Armes*"); break; }
                 sb.append("`#").append(w.getId()).append("` **").append(w.getWeaponName()).append("**")
                         .append(" | ").append(qualityEmoji(w.getQuality())).append(" ").append(w.getQuality())
-                        .append(" | **").append(w.getPrice()).append("** 🪙\n");
+                        .append(" | **").append(w.getPrice()).append("** 🪙")
+                        .append(w.isLocked() ? " 🔒" : "")
+                        .append("\n");
             }
             eb.addField("🔫 Dernieres armes", sb.toString().trim(), false);
         }
@@ -179,20 +181,23 @@ public class InventoryUI {
             eb.setDescription("Tu n'as aucune arme.\nOuvre des caisses avec les boutons !");
         } else {
             long total = weapons.stream().mapToLong(WeaponDrop::getPrice).sum();
-            eb.setDescription("**" + weapons.size() + "** arme(s) — Valeur totale : **" + total + " 🪙**\n");
+            long lockedCount = weapons.stream().filter(WeaponDrop::isLocked).count();
+            eb.setDescription("**" + weapons.size() + "** arme(s) — Valeur totale : **" + total + " 🪙**"
+                    + (lockedCount > 0 ? " | 🔒 **" + lockedCount + "** verrouillee(s)" : ""));
 
             StringBuilder sb = new StringBuilder();
             int shown = 0;
             for (WeaponDrop w : weapons) {
                 if (shown++ >= 15) {
-                    sb.append("*...et ").append(weapons.size() - 15).append(" autre(s). Utilise `/weapons`*\n");
+                    sb.append("*...et ").append(weapons.size() - 15).append(" autre(s)*\n");
                     break;
                 }
                 sb.append("`#").append(w.getId()).append("` **").append(w.getWeaponName()).append("**")
                         .append(" | ").append(qualityEmoji(w.getQuality())).append(" ").append(w.getQuality())
                         .append(" | `").append(String.format("%.4f", w.getFloatValue())).append("`")
                         .append(" | **").append(w.getPrice()).append("** 🪙")
-                        .append(" → `/sell id:").append(w.getId()).append("`\n");
+                        .append(w.isLocked() ? " 🔒" : "")
+                        .append(" — `/sell id:").append(w.getId()).append("`\n");
             }
             if (sb.length() > 0) eb.addField("", sb.toString().trim(), false);
         }

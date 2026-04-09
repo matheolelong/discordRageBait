@@ -168,27 +168,47 @@ public class CaseInteractionHandler {
 
     /**
      * Initie la vente totale : remplace l'embed par la demande de confirmation.
+     * Seules les armes non verrouillee sont vendues.
      */
     private void initSellAll(ButtonInteractionEvent event, long userId) {
-        List<WeaponDrop> weapons = CaseManager.getInstance().getWeaponInventory(userId);
+        CaseManager cm = CaseManager.getInstance();
+        List<WeaponDrop> allWeapons      = cm.getWeaponInventory(userId);
+        List<WeaponDrop> sellableWeapons = cm.getUnlockedWeaponInventory(userId);
 
-        if (weapons.isEmpty()) {
-            event.reply("❌ Tu n'as aucune arme a vendre!").setEphemeral(true).queue();
+        if (sellableWeapons.isEmpty()) {
+            long lockedCount = allWeapons.stream().filter(WeaponDrop::isLocked).count();
+            String msg = lockedCount > 0
+                    ? "❌ Tu n'as aucune arme vendable ! (**" + lockedCount + "** arme(s) verrouillee(s) 🔒).\n"
+                      + "Utilise `/unlock id:<n>` pour deverrouiller une arme avant de la vendre."
+                    : "❌ Tu n'as aucune arme a vendre!";
+            event.reply(msg).setEphemeral(true).queue();
             return;
         }
 
         event.deferEdit().queue();
-        long total = weapons.stream().mapToLong(WeaponDrop::getPrice).sum();
+        long total       = sellableWeapons.stream().mapToLong(WeaponDrop::getPrice).sum();
+        int lockedCount  = (int) allWeapons.stream().filter(WeaponDrop::isLocked).count();
+
+        // Construire l'embed de confirmation en mentionnant les locked preservees
+        EmbedBuilder eb = new EmbedBuilder()
+                .setColor(InventoryUI.COLOR_DANGER)
+                .setTitle("⚠️ Confirmer la vente")
+                .setDescription(
+                    "Tu vas vendre **" + sellableWeapons.size() + "** arme(s) pour un total de **" + total + " 🪙**.\n\n" +
+                    (lockedCount > 0
+                        ? "🔒 **" + lockedCount + "** arme(s) verrouillee(s) seront **preservees**.\n\n"
+                        : "") +
+                    "⛔ Cette action est **irreversible** !");
 
         event.getHook()
-                .editOriginalEmbeds(InventoryUI.buildSellConfirmEmbed(weapons.size(), total))
+                .editOriginalEmbeds(eb.build())
                 .setComponents(InventoryUI.buildSellConfirmButtons(userId))
                 .queue();
     }
 
     /**
-     * Confirme la vente de toutes les armes : supprime en BDD, credite les coins,
-     * montre un embed de succes puis revient a l'inventaire principal.
+     * Confirme la vente : vend UNIQUEMENT les armes non verrouillee.
+     * Les armes locked restent dans l'inventaire.
      */
     private void confirmSellAll(ButtonInteractionEvent event, long userId) {
         event.deferEdit().queue();
@@ -196,25 +216,31 @@ public class CaseInteractionHandler {
         CaseManager cm = CaseManager.getInstance();
         CasinoManager casino = CasinoManager.getInstance();
 
-        List<WeaponDrop> weapons = cm.getWeaponInventory(userId);
-        if (weapons.isEmpty()) {
+        List<WeaponDrop> sellable = cm.getUnlockedWeaponInventory(userId);
+        if (sellable.isEmpty()) {
             showMainView(event, userId);
             return;
         }
 
         long total = 0;
-        for (WeaponDrop w : weapons) {
+        for (WeaponDrop w : sellable) {
             cm.removeWeapon(w.getId(), userId);
             total += w.getPrice();
         }
         casino.addBalance(userId, total);
         long newBalance = casino.getBalance(userId);
 
+        // Compter les armes restantes (locked)
+        int remaining = cm.getWeaponInventory(userId).size();
+
         EmbedBuilder eb = new EmbedBuilder()
                 .setColor(InventoryUI.COLOR_SUCCESS)
                 .setTitle("💸 Vente effectuee!")
-                .setDescription("**" + weapons.size() + "** arme(s) vendues pour **" + total + " 🪙** !\n" +
-                                "💰 Nouveau solde : **" + newBalance + "** 🪙");
+                .setDescription("**" + sellable.size() + "** arme(s) vendues pour **" + total + " 🪙** !\n" +
+                                "💰 Nouveau solde : **" + newBalance + "** 🪙"
+                                + (remaining > 0
+                                    ? "\n🔒 **" + remaining + "** arme(s) verrouillee(s) conservees dans ton inventaire."
+                                    : ""));
 
         String uid = String.valueOf(userId);
         event.getHook()
@@ -227,8 +253,8 @@ public class CaseInteractionHandler {
                 )
                 .queue();
 
-        log.info("[Cases] {} a vendu {} arme(s) pour {} coins (total solde: {}).",
-                userId, weapons.size(), total, newBalance);
+        log.info("[Cases] {} a vendu {} arme(s) pour {} coins, {} arme(s) locked preservees.",
+                userId, sellable.size(), total, remaining);
     }
 
     // =========================================================================
