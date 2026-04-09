@@ -8,6 +8,8 @@ import com.ragebait.RandomMuteManager;
 import com.ragebait.RouletteManager;
 import com.ragebait.StatusTrackerManager;
 import com.ragebait.cases.CaseCommandHandler;
+import com.ragebait.cases.CaseInteractionHandler;
+import com.ragebait.cases.CaseManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -21,14 +23,18 @@ import net.dv8tion.jda.api.interactions.components.text.TextInputStyle;
 import net.dv8tion.jda.api.interactions.modals.Modal;
 
 import java.awt.Color;
-import java.util.Set;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SlashCommandListener extends ListenerAdapter {
 
     /** Handler pour les commandes de caisses CS:GO-like */
     private final CaseCommandHandler caseHandler = new CaseCommandHandler();
+
+    /** Handler pour les boutons interactifs des caisses et du shop */
+    private final CaseInteractionHandler caseInteractionHandler = new CaseInteractionHandler(caseHandler);
 
     private static final String[] RAGE_BAIT_MESSAGES = {
             "Je pense que les pizzas à l'ananas sont les meilleures 🍕🍍",
@@ -80,6 +86,17 @@ public class SlashCommandListener extends ListenerAdapter {
         }
     }
 
+    @Override
+    public void onButtonInteraction(ButtonInteractionEvent event) {
+        // Delegue les boutons interactifs de caisses/shop
+        if (caseInteractionHandler.handle(event)) return;
+
+        // Boutons existants (blackjack, slots, coinflip...)
+        String id = event.getComponentId();
+        // Les autres boutons sont traites par leurs handlers repectifs via les callbacks
+        // (pas geres ici car ils utilisent des reply directement dans leurs flows)
+    }
+
     private void handlePing(SlashCommandInteractionEvent event) {
         long time = System.currentTimeMillis();
         event.reply("Pong!").queue(response -> {
@@ -105,47 +122,46 @@ public class SlashCommandListener extends ListenerAdapter {
     }
 
     private void handleInfo(SlashCommandInteractionEvent event) {
+        event.deferReply().setEphemeral(true).queue();
+
         GhostPingManager gp = GhostPingManager.getInstance();
         RandomMuteManager rm = RandomMuteManager.getInstance();
         StatusTrackerManager st = StatusTrackerManager.getInstance();
-        
+        CasinoManager casino = CasinoManager.getInstance();
+        CaseManager cm = CaseManager.getInstance();
+
+        long userId = event.getUser().getIdLong();
+        long balance = casino.getBalance(userId);
+        int caseCount = cm.getFullCaseInventory(userId).values().stream().mapToInt(Integer::intValue).sum();
+        List<com.ragebait.cases.WeaponDrop> weapons = cm.getWeaponInventory(userId);
+        long weaponValue = weapons.stream().mapToLong(com.ragebait.cases.WeaponDrop::getPrice).sum();
+
         EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("🎣 Rage Bait Bot")
+                .setTitle("\uD83C\uDFA3 Rage Bait Bot")
                 .setDescription("Un bot pour faire rager tes potes!")
                 .setColor(Color.ORANGE)
-                .addField("👻 Ghost Ping", """
-                        `/ghostping start/stop/status`
-                        `/settarget @user` - Cible à ping
-                        `/addchannel #salon` - Ajouter salon
-                        `/removechannel #salon` - Retirer salon
-                        `/setinterval <min> [sec]` - Intervalle
-                        """, false)
-                .addField("🔇 Random Mute", """
-                        `/randommute start @user [delai] [duree]`
-                        `/randommute stop`
-                        `/randommute status`
-                        """, false)
-                .addField("📝 Status Tracker", """
-                        `/statustrack start @user #salon`
-                        `/statustrack stop`
-                        `/statustrack status`
-                        """, false)
-                .addField("🎰 Casino", """
-                        `/balance` - Voir ton solde
-                        `/daily` - Récupère 500 🪙 / 24h
-                        `/slots <mise>` - Machine à sous
-                        `/coinflip <mise> <pile/face>` - Pile ou Face
-                        `/blackjack <mise>` - Blackjack
-                        `/give @user <montant>` - Donner des 🪙
-                        `/leaderboard` - Classement
-                        """, false)
-                .addField("📊 Statuts actuels", 
-                        "Ghost Ping: " + (gp.isRunning() ? "🟢" : "🔴") + 
-                        " | Random Mute: " + (rm.isRunning() ? "🟢" : "🔴") +
-                        " | Status Tracker: " + (st.isEnabled() ? "🟢" : "🔴"), false)
+                .setThumbnail(event.getUser().getEffectiveAvatarUrl())
+                .addField("\uD83D\uDCB0 Ton casino",
+                        "Solde : **" + balance + "** \uD83E\uDE™\n" +
+                        "Caisses : **" + caseCount + "**\n" +
+                        "Armes : **" + weapons.size() + "** (valeur : **" + weaponValue + "** \uD83E\uDE™)", false)
+                .addField("\uD83D\uDC7B Ghost Ping",
+                        "/ghostping start/stop/status\n/settarget @user\n/addchannel #salon\n/setinterval <min> [sec]", false)
+                .addField("\uD83D\uDD07 Random Mute",
+                        "/randommute start @user [delai] [duree]\n/randommute stop/status", false)
+                .addField("\uD83D\uDCDD Status Tracker",
+                        "/statustrack start @user #salon\n/statustrack stop/status", false)
+                .addField("\uD83C\uDFB0 Casino",
+                        "/balance /daily /slots /coinflip /blackjack /give /leaderboard", false)
+                .addField("\uD83C\uDF81 Caisses",
+                        "/cases (shop) /inventory /opencase /weapons /sell", false)
+                .addField("\uD83D\uDCCA Statuts",
+                        "Ghost Ping: " + (gp.isRunning() ? "\uD83D\uDFE2" : "\uD83D\uDD34") +
+                        " | Random Mute: " + (rm.isRunning() ? "\uD83D\uDFE2" : "\uD83D\uDD34") +
+                        " | Status Tracker: " + (st.isEnabled() ? "\uD83D\uDFE2" : "\uD83D\uDD34"), false)
                 .setFooter("Made with JDA ❤️");
 
-        event.replyEmbeds(embed.build()).setEphemeral(true).queue();
+        event.getHook().sendMessageEmbeds(embed.build()).queue();
     }
 
     private void handleGhostPing(SlashCommandInteractionEvent event) {
@@ -1077,22 +1093,16 @@ public class SlashCommandListener extends ListenerAdapter {
 
     // ============ CASES COMMANDS ============
 
-    /** /cases - liste des caisses disponibles */
+    /** /cases - shop interactif avec boutons Buy */
     private void handleCases(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
-        caseHandler.handleListCases(event.getHook());
+        caseHandler.handleShop(event.getHook(), event.getUser().getIdLong());
     }
 
-    /** /buycase <casename> - acheter une caisse */
+    /** /buycase <casename> - achat de caisse (legacy, garder pour compat) */
     private void handleBuyCase(SlashCommandInteractionEvent event) {
-        event.deferReply().queue();
-        String caseName = event.getOption("casename").getAsString().trim().toLowerCase();
-        caseHandler.handleBuyCase(
-                event.getHook(),
-                event.getUser().getIdLong(),
-                event.getUser().getAsMention(),
-                caseName
-        );
+        // Redirige vers le shop interactif
+        event.reply("Utilise `/cases` pour acheter des caisses via le shop interactif!").setEphemeral(true).queue();
     }
 
     /** /opencase <casename> - ouvrir une caisse avec animation */
@@ -1107,17 +1117,16 @@ public class SlashCommandListener extends ListenerAdapter {
         );
     }
 
-    /** /inventory - inventaire des caisses du joueur */
+    /** /inventory [user] - inventaire unifie caisses + armes avec boutons */
     private void handleInventory(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
-        caseHandler.handleCaseInventory(
-                event.getHook(),
-                event.getUser().getIdLong(),
-                event.getUser().getName()
-        );
+        User target = event.getOption("user") != null
+                ? event.getOption("user").getAsUser()
+                : event.getUser();
+        caseHandler.handleInventory(event.getHook(), event.getUser().getIdLong(), target);
     }
 
-    /** /weapons - inventaire des armes droppees */
+    /** /weapons - inventaire detaille des armes */
     private void handleWeapons(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
         caseHandler.handleWeapons(
@@ -1127,7 +1136,7 @@ public class SlashCommandListener extends ListenerAdapter {
         );
     }
 
-    /** /sell id:<n> - vendre une arme */
+    /** /sell id:<n> - vendre une arme individuelle */
     private void handleSell(SlashCommandInteractionEvent event) {
         event.deferReply().queue();
         int weaponId = event.getOption("id").getAsInt();
@@ -1138,3 +1147,4 @@ public class SlashCommandListener extends ListenerAdapter {
         );
     }
 }
+

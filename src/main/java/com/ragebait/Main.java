@@ -155,7 +155,8 @@ public class Main {
                                 .addOption(OptionType.STRING, "casename", "Nom de la caisse (ex: alpha_case)", true),
                         Commands.slash("opencase", "Ouvre une caisse de ton inventaire")
                                 .addOption(OptionType.STRING, "casename", "Nom de la caisse a ouvrir", true),
-                        Commands.slash("inventory", "Voir les caisses dans ton inventaire"),
+                        Commands.slash("inventory", "Voir l'inventaire caisses et armes")
+                                .addOption(OptionType.USER, "user", "Voir l'inventaire d'un autre joueur", false),
                         Commands.slash("weapons", "Voir les armes dans ton inventaire"),
                         Commands.slash("sell", "Vendre une arme de ton inventaire")
                                 .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme (visible dans /weapons)", true)
