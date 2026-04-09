@@ -86,16 +86,6 @@ public class SlashCommandListener extends ListenerAdapter {
         }
     }
 
-    @Override
-    public void onButtonInteraction(ButtonInteractionEvent event) {
-        // Delegue les boutons interactifs de caisses/shop
-        if (caseInteractionHandler.handle(event)) return;
-
-        // Boutons existants (blackjack, slots, coinflip...)
-        String id = event.getComponentId();
-        // Les autres boutons sont traites par leurs handlers repectifs via les callbacks
-        // (pas geres ici car ils utilisent des reply directement dans leurs flows)
-    }
 
     private void handlePing(SlashCommandInteractionEvent event) {
         long time = System.currentTimeMillis();
@@ -705,13 +695,16 @@ public class SlashCommandListener extends ListenerAdapter {
     }
     
     // ============ BUTTON HANDLER ============
-    
+
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event) {
+        // Delegue en priorite les boutons des caisses et du shop
+        if (caseInteractionHandler.handle(event)) return;
+
         String buttonId = event.getComponentId();
         long userId = event.getUser().getIdLong();
         CasinoManager casino = CasinoManager.getInstance();
-        
+
         // Blackjack Hit/Stand
         if (buttonId.equals("bj_hit") || buttonId.equals("bj_stand")) {
             // deferEdit immédiatement pour éviter le timeout de 3s
