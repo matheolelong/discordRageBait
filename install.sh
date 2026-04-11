@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Installation du bot RageBait..."
+echo "🚀 Installation du bot RageBait..."
 
 REPO_DIR=$(pwd)
 ENV_FILE="$REPO_DIR/.env"
@@ -9,123 +9,124 @@ BOT_CMD="/usr/local/bin/bot"
 # Vérifier Docker
 if ! command -v docker &> /dev/null
 then
-    echo "Docker n'est pas installé."
+    echo "❌ Docker n'est pas installé."
     echo "Installe Docker puis relance le script."
     exit 1
 fi
 
 # Création du .env si absent
 if [ ! -f "$ENV_FILE" ]; then
-    echo "Création du fichier .env"
-    cp .env.example .env
-    echo "⚠️  Edite le fichier .env avec ton token Discord et ta base de données"
+    echo "📄 Création du fichier .env"
+    if [ -f ".env.example" ]; then
+        cp .env.example .env
+    else
+        touch .env
+    fi
+    echo "⚠️  Edite le fichier .env avec ton token Discord et tes accès."
 fi
 
-# Création commande bot
-echo "Création de la commande bot..."
+# Création du dossier cases s'il n'existe pas
+mkdir -p "$REPO_DIR/cases"
+
+# Création de la commande système 'bot'
+echo "🛠️  Création de la commande : $BOT_CMD"
 
 sudo tee $BOT_CMD > /dev/null <<EOF
 #!/bin/bash
 
-set -e
-
+# Variables globales
 BOT_NAME="ragebait-bot"
 IMAGE_NAME="ragebait-bot"
 BOT_DIR="$REPO_DIR"
-ENV_FILE="$ENV_FILE"
+ENV_FILE="\$BOT_DIR/.env"
 CASES_FILE="\$BOT_DIR/cases/cases.json"
 
 case "\$1" in
 
 start)
-  if docker ps --format '{{.Names}}' | grep -q "^\$BOT_NAME\$"; then
-    echo "Le bot tourne déjà."
-    exit 0
-  fi
-  if [ ! -f "\$CASES_FILE" ]; then
-    echo "❌ cases/cases.json introuvable, abandon."
-    exit 1
-  fi
-  docker run -d --name \$BOT_NAME \\
-    --env-file \$ENV_FILE \\
-    --restart unless-stopped \\
-    -v \$CASES_FILE:/app/cases/cases.json \\
-    \$IMAGE_NAME
-  echo "✅ Bot démarré."
+    if docker ps --format '{{.Names}}' | grep -q "^\$BOT_NAME\$"; then
+        echo "✅ Le bot tourne déjà."
+        exit 0
+    fi
+    if [ ! -f "\$CASES_FILE" ]; then
+        echo "❌ Erreur : \$CASES_FILE est introuvable."
+        echo "Place ton fichier cases.json dans le dossier cases/ avant de démarrer."
+        exit 1
+    fi
+    echo "Démarrage du bot..."
+    docker run -d --name \$BOT_NAME \\
+        --env-file \$ENV_FILE \\
+        --restart unless-stopped \\
+        -v "\$CASES_FILE:/app/cases/cases.json" \\
+        \$IMAGE_NAME
+    echo "🚀 Bot démarré avec succès."
 ;;
 
 stop)
-  docker stop \$BOT_NAME 2>/dev/null
-  docker rm \$BOT_NAME 2>/dev/null
-  echo "✅ Bot arrêté."
+    echo "Arrêt du bot..."
+    docker stop \$BOT_NAME 2>/dev/null || true
+    docker rm \$BOT_NAME 2>/dev/null || true
+    echo "🛑 Bot arrêté et supprimé."
 ;;
 
 status)
-  if docker ps --format '{{.Names}}' | grep -q "^\$BOT_NAME\$"; then
-    echo "✅ Le bot tourne."
-  else
-    echo "❌ Le bot est arrêté."
-  fi
+    if docker ps --format '{{.Names}}' | grep -q "^\$BOT_NAME\$"; then
+        echo "🟢 Statut : En ligne"
+    else
+        echo "🔴 Statut : Hors ligne"
+    fi
 ;;
 
 logs)
-  docker logs -f \$BOT_NAME
+    docker logs -f \$BOT_NAME
 ;;
 
 rebuild)
-  docker stop \$BOT_NAME 2>/dev/null
-  docker rm \$BOT_NAME 2>/dev/null
-  cd \$BOT_DIR
-  docker build -t \$IMAGE_NAME .
-  if [ ! -f "\$CASES_FILE" ]; then
-    echo "❌ cases/cases.json introuvable, abandon."
-    exit 1
-  fi
-  docker run -d --name \$BOT_NAME \\
-    --env-file \$ENV_FILE \\
-    --restart unless-stopped \\
-    -v \$CASES_FILE:/app/cases/cases.json \\
-    \$IMAGE_NAME
-  echo "✅ Bot rebuild et redémarré."
+    echo "🔨 Rebuild de l'image..."
+    cd "\$BOT_DIR"
+    docker build -t \$IMAGE_NAME .
+    \$0 stop
+    \$0 start
+    echo "✅ Rebuild terminé."
 ;;
 
 update)
-  docker stop \$BOT_NAME 2>/dev/null
-  docker rm \$BOT_NAME 2>/dev/null
-  cd \$BOT_DIR
-  git pull || { echo "❌ git pull a échoué, abandon."; exit 1; }
-  docker build -t \$IMAGE_NAME .
-  if [ ! -f "\$CASES_FILE" ]; then
-    echo "❌ cases/cases.json introuvable, abandon."
-    exit 1
-  fi
-  docker run -d --name \$BOT_NAME \\
-    --env-file \$ENV_FILE \\
-    --restart unless-stopped \\
-    -v \$CASES_FILE:/app/cases/cases.json \\
-    \$IMAGE_NAME
-  echo "✅ Bot mis à jour et redémarré."
+    echo "🔄 Mise à jour depuis Git..."
+    cd "\$BOT_DIR"
+    # Pull sans quitter le script en cas d'erreur (ex: pas de repo git)
+    git pull || echo "⚠️  Attention : 'git pull' a échoué."
+    
+    echo "🔨 Rebuild après mise à jour..."
+    docker build -t \$IMAGE_NAME .
+    
+    # On redémarre proprement
+    \$0 stop
+    \$0 start
+    echo "✨ Mise à jour et redémarrage terminés."
 ;;
 
 *)
-  echo "Usage: bot {start|stop|status|logs|rebuild|update}"
+    echo "Usage: bot {start|stop|status|logs|rebuild|update}"
 ;;
 
 esac
 EOF
 
+# Rendre le script exécutable
 sudo chmod +x $BOT_CMD
 
-echo "Build Docker..."
+# Premier Build
+echo "🏗️  Build initial de l'image Docker..."
 docker build -t ragebait-bot .
 
 echo ""
-echo "✅ Installation terminée."
-echo ""
-echo "Commandes disponibles :"
-echo "  bot start    → Démarre le bot"
-echo "  bot stop     → Arrête le bot"
-echo "  bot status   → Vérifie si le bot tourne"
-echo "  bot logs     → Affiche les logs en direct"
-echo "  bot rebuild  → Rebuild l'image et redémarre (sans git pull)"
-echo "  bot update   → git pull + rebuild + redémarre"
+echo "✅ Installation terminée !"
+echo "--------------------------------------"
+echo "Commandes utilisables partout :"
+echo "  bot start    -> Lancer le bot"
+echo "  bot stop     -> Arrêter le bot"
+echo "  bot status   -> Voir si le bot est en vie"
+echo "  bot logs     -> Voir la console en direct"
+echo "  bot update   -> Télécharger les modifs git + redémarrer"
+echo "  bot rebuild  -> Re-compiler sans télécharger (utile si tu modifies cases.json)"
+echo "--------------------------------------"
