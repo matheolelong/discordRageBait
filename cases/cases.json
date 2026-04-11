@@ -146,7 +146,7 @@
           "name": "AWP Dragon Lore",
           "minPrice": 50000,
           "maxPrice": 150000,
-          "dropChance": 3e-05
+          "dropChance": 0.00003
         }
       ]
     },
@@ -290,7 +290,7 @@
           "name": "M4A4 Howl",
           "minPrice": 100000,
           "maxPrice": 300000,
-          "dropChance": 1.5e-05
+          "dropChance": 0.000015
         }
       ]
     },
@@ -422,19 +422,19 @@
           "name": "Karambit Tiger Tooth",
           "minPrice": 80000,
           "maxPrice": 150000,
-          "dropChance": 8.5e-05
+          "dropChance": 0.000085
         },
         {
           "name": "M9 Bayonet Lore",
           "minPrice": 90000,
           "maxPrice": 200000,
-          "dropChance": 4.2e-05
+          "dropChance": 0.000042
         },
         {
           "name": "Butterfly Knife Doppler",
           "minPrice": 150000,
           "maxPrice": 300000,
-          "dropChance": 1.3e-05
+          "dropChance": 0.000013
         }
       ]
     },
@@ -548,25 +548,25 @@
           "name": "StatTrak AK-47 Fire Serpent",
           "minPrice": 100000,
           "maxPrice": 300000,
-          "dropChance": 8e-05
+          "dropChance": 0.00008
         },
         {
           "name": "AWP Gungnir",
           "minPrice": 300000,
           "maxPrice": 800000,
-          "dropChance": 1.5e-05
+          "dropChance": 0.000015
         },
         {
           "name": "Karambit Case Hardened (Blue Gem)",
           "minPrice": 500000,
           "maxPrice": 2000000,
-          "dropChance": 6e-06
+          "dropChance": 0.000006
         },
         {
           "name": "Butterfly Knife Sapphire",
           "minPrice": 1500000,
           "maxPrice": 3000000,
-          "dropChance": 1.5e-06
+          "dropChance": 0.0000015
         }
       ]
     },
@@ -680,31 +680,31 @@
           "name": "AK-47 Wild Lotus (FN)",
           "minPrice": 800000,
           "maxPrice": 2000000,
-          "dropChance": 4.5e-05
+          "dropChance": 0.000045
         },
         {
           "name": "Butterfly Knife Sapphire",
           "minPrice": 1200000,
           "maxPrice": 2800000,
-          "dropChance": 1.7e-05
+          "dropChance": 0.000017
         },
         {
           "name": "Karambit Ruby",
           "minPrice": 1000000,
           "maxPrice": 2500000,
-          "dropChance": 1.4e-05
+          "dropChance": 0.000014
         },
         {
           "name": "M9 Bayonet Emerald",
           "minPrice": 1500000,
           "maxPrice": 3500000,
-          "dropChance": 7e-06
+          "dropChance": 0.000007
         },
         {
           "name": "AWP Dragon Lore (Souvenir)",
           "minPrice": 5000000,
           "maxPrice": 15000000,
-          "dropChance": 1.2e-06
+          "dropChance": 0.0000012
         }
       ]
     }
