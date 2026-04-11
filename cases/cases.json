@@ -1,0 +1,712 @@
+{
+  "cases": [
+    {
+      "name": "starter_case",
+      "price": 1000,
+      "weapons": [
+        {
+          "name": "P2000 Oceanic",
+          "minPrice": 50,
+          "maxPrice": 200,
+          "dropChance": 0.09
+        },
+        {
+          "name": "Glock-18 Candy Apple",
+          "minPrice": 50,
+          "maxPrice": 250,
+          "dropChance": 0.09
+        },
+        {
+          "name": "USP-S Night Ops",
+          "minPrice": 80,
+          "maxPrice": 300,
+          "dropChance": 0.08
+        },
+        {
+          "name": "MP9 Sand Scale",
+          "minPrice": 100,
+          "maxPrice": 400,
+          "dropChance": 0.08
+        },
+        {
+          "name": "UMP-45 Exposure",
+          "minPrice": 100,
+          "maxPrice": 400,
+          "dropChance": 0.08
+        },
+        {
+          "name": "Nova Exo",
+          "minPrice": 100,
+          "maxPrice": 500,
+          "dropChance": 0.07
+        },
+        {
+          "name": "MAG-7 Heat",
+          "minPrice": 100,
+          "maxPrice": 500,
+          "dropChance": 0.07
+        },
+        {
+          "name": "FAMAS Survivor Z",
+          "minPrice": 200,
+          "maxPrice": 800,
+          "dropChance": 0.06
+        },
+        {
+          "name": "Galil AR Rocket Pop",
+          "minPrice": 200,
+          "maxPrice": 850,
+          "dropChance": 0.06
+        },
+        {
+          "name": "SG 553 Pulse",
+          "minPrice": 250,
+          "maxPrice": 900,
+          "dropChance": 0.05
+        },
+        {
+          "name": "M4A4 Poly Mag",
+          "minPrice": 300,
+          "maxPrice": 950,
+          "dropChance": 0.05
+        },
+        {
+          "name": "AK-47 Safari Mesh",
+          "minPrice": 400,
+          "maxPrice": 1100,
+          "dropChance": 0.035
+        },
+        {
+          "name": "AK-47 Elite Build",
+          "minPrice": 500,
+          "maxPrice": 1500,
+          "dropChance": 0.025
+        },
+        {
+          "name": "M4A1-S Decimator",
+          "minPrice": 600,
+          "maxPrice": 1800,
+          "dropChance": 0.02
+        },
+        {
+          "name": "Five-SeveN Monkey Business",
+          "minPrice": 700,
+          "maxPrice": 2000,
+          "dropChance": 0.015
+        },
+        {
+          "name": "Desert Eagle Conspiracy",
+          "minPrice": 700,
+          "maxPrice": 2000,
+          "dropChance": 0.015
+        },
+        {
+          "name": "AK-47 Redline",
+          "minPrice": 1000,
+          "maxPrice": 3000,
+          "dropChance": 0.012
+        },
+        {
+          "name": "M4A4 Desolate Space",
+          "minPrice": 1000,
+          "maxPrice": 3500,
+          "dropChance": 0.011
+        },
+        {
+          "name": "USP-S Cortex",
+          "minPrice": 1500,
+          "maxPrice": 4000,
+          "dropChance": 0.0075
+        },
+        {
+          "name": "AWP Fever Dream",
+          "minPrice": 1500,
+          "maxPrice": 4000,
+          "dropChance": 0.0075
+        },
+        {
+          "name": "AK-47 Neon Rider",
+          "minPrice": 3000,
+          "maxPrice": 8000,
+          "dropChance": 0.0025
+        },
+        {
+          "name": "AWP Asiimov",
+          "minPrice": 3000,
+          "maxPrice": 9000,
+          "dropChance": 0.0018
+        },
+        {
+          "name": "Gut Knife Doppler",
+          "minPrice": 15000,
+          "maxPrice": 40000,
+          "dropChance": 0.00015
+        },
+        {
+          "name": "AWP Dragon Lore",
+          "minPrice": 50000,
+          "maxPrice": 150000,
+          "dropChance": 3e-05
+        }
+      ]
+    },
+    {
+      "name": "advanced_case",
+      "price": 2000,
+      "weapons": [
+        {
+          "name": "Glock-18 Water Elemental",
+          "minPrice": 400,
+          "maxPrice": 1200,
+          "dropChance": 0.08
+        },
+        {
+          "name": "USP-S Cyrex",
+          "minPrice": 500,
+          "maxPrice": 1500,
+          "dropChance": 0.07
+        },
+        {
+          "name": "M4A4 Griffin",
+          "minPrice": 500,
+          "maxPrice": 1600,
+          "dropChance": 0.07
+        },
+        {
+          "name": "MP7 Bloodsport",
+          "minPrice": 600,
+          "maxPrice": 1800,
+          "dropChance": 0.06
+        },
+        {
+          "name": "AWP Atheris",
+          "minPrice": 600,
+          "maxPrice": 1900,
+          "dropChance": 0.06
+        },
+        {
+          "name": "MAC-10 Disco Tech",
+          "minPrice": 700,
+          "maxPrice": 1800,
+          "dropChance": 0.05
+        },
+        {
+          "name": "Galil AR Chromatic Aberration",
+          "minPrice": 800,
+          "maxPrice": 1900,
+          "dropChance": 0.05
+        },
+        {
+          "name": "Desert Eagle Kumicho Dragon",
+          "minPrice": 800,
+          "maxPrice": 2200,
+          "dropChance": 0.04
+        },
+        {
+          "name": "AK-47 Blue Laminate",
+          "minPrice": 900,
+          "maxPrice": 2500,
+          "dropChance": 0.035
+        },
+        {
+          "name": "M4A1-S Nightmare",
+          "minPrice": 1000,
+          "maxPrice": 3000,
+          "dropChance": 0.025
+        },
+        {
+          "name": "FAMAS Roll Cage",
+          "minPrice": 1000,
+          "maxPrice": 3200,
+          "dropChance": 0.025
+        },
+        {
+          "name": "SSG 08 Dragonfire",
+          "minPrice": 1200,
+          "maxPrice": 3500,
+          "dropChance": 0.018
+        },
+        {
+          "name": "AK-47 Orbit Mk01",
+          "minPrice": 1500,
+          "maxPrice": 4000,
+          "dropChance": 0.014
+        },
+        {
+          "name": "StatTrak M4A4 Evil Daimyo",
+          "minPrice": 1800,
+          "maxPrice": 4200,
+          "dropChance": 0.012
+        },
+        {
+          "name": "USP-S Neo-Noir",
+          "minPrice": 2000,
+          "maxPrice": 6000,
+          "dropChance": 0.009
+        },
+        {
+          "name": "M4A4 Hellfire",
+          "minPrice": 2200,
+          "maxPrice": 6500,
+          "dropChance": 0.0075
+        },
+        {
+          "name": "AK-47 Frontside Misty",
+          "minPrice": 2500,
+          "maxPrice": 7000,
+          "dropChance": 0.006
+        },
+        {
+          "name": "AWP Wildfire",
+          "minPrice": 3000,
+          "maxPrice": 10000,
+          "dropChance": 0.004
+        },
+        {
+          "name": "Desert Eagle Printstream",
+          "minPrice": 4000,
+          "maxPrice": 12000,
+          "dropChance": 0.0025
+        },
+        {
+          "name": "AK-47 Bloodsport",
+          "minPrice": 5000,
+          "maxPrice": 15000,
+          "dropChance": 0.002
+        },
+        {
+          "name": "Shadow Daggers Fade",
+          "minPrice": 20000,
+          "maxPrice": 50000,
+          "dropChance": 0.0002
+        },
+        {
+          "name": "Flip Knife Tiger Tooth",
+          "minPrice": 30000,
+          "maxPrice": 70000,
+          "dropChance": 0.0001
+        },
+        {
+          "name": "M4A4 Howl",
+          "minPrice": 100000,
+          "maxPrice": 300000,
+          "dropChance": 1.5e-05
+        }
+      ]
+    },
+    {
+      "name": "professional_case",
+      "price": 5000,
+      "weapons": [
+        {
+          "name": "AK-47 Point Disarray",
+          "minPrice": 1500,
+          "maxPrice": 3800,
+          "dropChance": 0.09
+        },
+        {
+          "name": "M4A1-S Golden Coil",
+          "minPrice": 1800,
+          "maxPrice": 4200,
+          "dropChance": 0.08
+        },
+        {
+          "name": "AWP Hyper Beast",
+          "minPrice": 2000,
+          "maxPrice": 4500,
+          "dropChance": 0.07
+        },
+        {
+          "name": "USP-S Kill Confirmed",
+          "minPrice": 2500,
+          "maxPrice": 6000,
+          "dropChance": 0.055
+        },
+        {
+          "name": "Desert Eagle Code Red",
+          "minPrice": 2000,
+          "maxPrice": 5500,
+          "dropChance": 0.055
+        },
+        {
+          "name": "StatTrak Glock-18 Water Elemental",
+          "minPrice": 2200,
+          "maxPrice": 4800,
+          "dropChance": 0.045
+        },
+        {
+          "name": "P90 Death by Kitty",
+          "minPrice": 2800,
+          "maxPrice": 4900,
+          "dropChance": 0.045
+        },
+        {
+          "name": "SSG 08 Blood in the Water",
+          "minPrice": 3000,
+          "maxPrice": 4950,
+          "dropChance": 0.035
+        },
+        {
+          "name": "Five-SeveN Hyper Beast",
+          "minPrice": 1500,
+          "maxPrice": 4990,
+          "dropChance": 0.03
+        },
+        {
+          "name": "AK-47 The Empress",
+          "minPrice": 5000,
+          "maxPrice": 9500,
+          "dropChance": 0.015
+        },
+        {
+          "name": "M4A4 Emperor",
+          "minPrice": 5500,
+          "maxPrice": 10000,
+          "dropChance": 0.012
+        },
+        {
+          "name": "AK-47 Fuel Injector",
+          "minPrice": 6000,
+          "maxPrice": 18000,
+          "dropChance": 0.0075
+        },
+        {
+          "name": "AWP Containment Breach",
+          "minPrice": 7000,
+          "maxPrice": 20000,
+          "dropChance": 0.006
+        },
+        {
+          "name": "M4A1-S Blue Phosphor",
+          "minPrice": 15000,
+          "maxPrice": 35000,
+          "dropChance": 0.0032
+        },
+        {
+          "name": "AK-47 Hydroponic",
+          "minPrice": 20000,
+          "maxPrice": 60000,
+          "dropChance": 0.0018
+        },
+        {
+          "name": "StatTrak Desert Eagle Printstream",
+          "minPrice": 12000,
+          "maxPrice": 30000,
+          "dropChance": 0.0022
+        },
+        {
+          "name": "Huntsman Knife Marble Fade",
+          "minPrice": 30000,
+          "maxPrice": 70000,
+          "dropChance": 0.00065
+        },
+        {
+          "name": "Falchion Knife Doppler",
+          "minPrice": 25000,
+          "maxPrice": 60000,
+          "dropChance": 0.00055
+        },
+        {
+          "name": "Ursus Knife Fade",
+          "minPrice": 40000,
+          "maxPrice": 90000,
+          "dropChance": 0.00028
+        },
+        {
+          "name": "Stiletto Knife Crimson Web",
+          "minPrice": 45000,
+          "maxPrice": 100000,
+          "dropChance": 0.00022
+        },
+        {
+          "name": "Karambit Tiger Tooth",
+          "minPrice": 80000,
+          "maxPrice": 150000,
+          "dropChance": 8.5e-05
+        },
+        {
+          "name": "M9 Bayonet Lore",
+          "minPrice": 90000,
+          "maxPrice": 200000,
+          "dropChance": 4.2e-05
+        },
+        {
+          "name": "Butterfly Knife Doppler",
+          "minPrice": 150000,
+          "maxPrice": 300000,
+          "dropChance": 1.3e-05
+        }
+      ]
+    },
+    {
+      "name": "elite_case",
+      "price": 10000,
+      "weapons": [
+        {
+          "name": "AK-47 Vulcan (FT)",
+          "minPrice": 4000,
+          "maxPrice": 8000,
+          "dropChance": 0.09
+        },
+        {
+          "name": "M4A4 Poseidon (FT)",
+          "minPrice": 5000,
+          "maxPrice": 9500,
+          "dropChance": 0.08
+        },
+        {
+          "name": "AWP Lightning Strike",
+          "minPrice": 6000,
+          "maxPrice": 9000,
+          "dropChance": 0.07
+        },
+        {
+          "name": "Desert Eagle Blaze",
+          "minPrice": 7000,
+          "maxPrice": 9800,
+          "dropChance": 0.06
+        },
+        {
+          "name": "AK-47 Case Hardened",
+          "minPrice": 5000,
+          "maxPrice": 9500,
+          "dropChance": 0.06
+        },
+        {
+          "name": "USP-S Target Acquired",
+          "minPrice": 8000,
+          "maxPrice": 9900,
+          "dropChance": 0.05
+        },
+        {
+          "name": "StatTrak AWP Hyper Beast",
+          "minPrice": 6000,
+          "maxPrice": 9950,
+          "dropChance": 0.04
+        },
+        {
+          "name": "M4A1-S Icarus Fell",
+          "minPrice": 7000,
+          "maxPrice": 9990,
+          "dropChance": 0.03
+        },
+        {
+          "name": "AK-47 Panthera Onca",
+          "minPrice": 8000,
+          "maxPrice": 11000,
+          "dropChance": 0.02
+        },
+        {
+          "name": "USP-S Kill Confirmed (FN)",
+          "minPrice": 10000,
+          "maxPrice": 15000,
+          "dropChance": 0.015
+        },
+        {
+          "name": "AK-47 Fire Serpent",
+          "minPrice": 15000,
+          "maxPrice": 45000,
+          "dropChance": 0.008
+        },
+        {
+          "name": "AWP Medusa",
+          "minPrice": 30000,
+          "maxPrice": 90000,
+          "dropChance": 0.004
+        },
+        {
+          "name": "Bayonet Gamma Doppler",
+          "minPrice": 40000,
+          "maxPrice": 100000,
+          "dropChance": 0.002
+        },
+        {
+          "name": "Karambit Doppler",
+          "minPrice": 50000,
+          "maxPrice": 120000,
+          "dropChance": 0.0012
+        },
+        {
+          "name": "M9 Bayonet Gamma Doppler",
+          "minPrice": 70000,
+          "maxPrice": 150000,
+          "dropChance": 0.0006
+        },
+        {
+          "name": "Butterfly Knife Fade",
+          "minPrice": 150000,
+          "maxPrice": 250000,
+          "dropChance": 0.0002
+        },
+        {
+          "name": "Karambit Marble Fade",
+          "minPrice": 80000,
+          "maxPrice": 180000,
+          "dropChance": 0.00015
+        },
+        {
+          "name": "StatTrak AK-47 Fire Serpent",
+          "minPrice": 100000,
+          "maxPrice": 300000,
+          "dropChance": 8e-05
+        },
+        {
+          "name": "AWP Gungnir",
+          "minPrice": 300000,
+          "maxPrice": 800000,
+          "dropChance": 1.5e-05
+        },
+        {
+          "name": "Karambit Case Hardened (Blue Gem)",
+          "minPrice": 500000,
+          "maxPrice": 2000000,
+          "dropChance": 6e-06
+        },
+        {
+          "name": "Butterfly Knife Sapphire",
+          "minPrice": 1500000,
+          "maxPrice": 3000000,
+          "dropChance": 1.5e-06
+        }
+      ]
+    },
+    {
+      "name": "legend_case",
+      "price": 25000,
+      "weapons": [
+        {
+          "name": "AK-47 Fire Serpent (WW)",
+          "minPrice": 12000,
+          "maxPrice": 18000,
+          "dropChance": 0.09
+        },
+        {
+          "name": "M4A4 Howl (BS)",
+          "minPrice": 15000,
+          "maxPrice": 22000,
+          "dropChance": 0.08
+        },
+        {
+          "name": "AWP Medusa (BS)",
+          "minPrice": 18000,
+          "maxPrice": 24000,
+          "dropChance": 0.07
+        },
+        {
+          "name": "Karambit Doppler P2",
+          "minPrice": 20000,
+          "maxPrice": 24500,
+          "dropChance": 0.06
+        },
+        {
+          "name": "M9 Bayonet Autotronic",
+          "minPrice": 15000,
+          "maxPrice": 24800,
+          "dropChance": 0.06
+        },
+        {
+          "name": "Butterfly Knife Blue Steel",
+          "minPrice": 18000,
+          "maxPrice": 24900,
+          "dropChance": 0.05
+        },
+        {
+          "name": "StatTrak AWP Lightning Strike",
+          "minPrice": 14000,
+          "maxPrice": 24950,
+          "dropChance": 0.04
+        },
+        {
+          "name": "Five-SeveN Case Hardened (Gold)",
+          "minPrice": 500,
+          "maxPrice": 24990,
+          "dropChance": 0.03
+        },
+        {
+          "name": "StatTrak AK-47 Vulcan",
+          "minPrice": 25000,
+          "maxPrice": 60000,
+          "dropChance": 0.015
+        },
+        {
+          "name": "AWP Prince",
+          "minPrice": 80000,
+          "maxPrice": 180000,
+          "dropChance": 0.0055
+        },
+        {
+          "name": "AWP Dragon Lore (FT)",
+          "minPrice": 150000,
+          "maxPrice": 300000,
+          "dropChance": 0.0024
+        },
+        {
+          "name": "Butterfly Knife Gamma Doppler",
+          "minPrice": 180000,
+          "maxPrice": 350000,
+          "dropChance": 0.0014
+        },
+        {
+          "name": "Karambit Lore (FN)",
+          "minPrice": 200000,
+          "maxPrice": 450000,
+          "dropChance": 0.00068
+        },
+        {
+          "name": "M9 Bayonet Lore (FN)",
+          "minPrice": 150000,
+          "maxPrice": 400000,
+          "dropChance": 0.00058
+        },
+        {
+          "name": "AWP Dragon Lore (FN)",
+          "minPrice": 400000,
+          "maxPrice": 900000,
+          "dropChance": 0.00023
+        },
+        {
+          "name": "StatTrak Karambit Lore",
+          "minPrice": 300000,
+          "maxPrice": 600000,
+          "dropChance": 0.00017
+        },
+        {
+          "name": "Butterfly Knife Marble Fade",
+          "minPrice": 150000,
+          "maxPrice": 300000,
+          "dropChance": 0.00017
+        },
+        {
+          "name": "AK-47 Wild Lotus (FN)",
+          "minPrice": 800000,
+          "maxPrice": 2000000,
+          "dropChance": 4.5e-05
+        },
+        {
+          "name": "Butterfly Knife Sapphire",
+          "minPrice": 1200000,
+          "maxPrice": 2800000,
+          "dropChance": 1.7e-05
+        },
+        {
+          "name": "Karambit Ruby",
+          "minPrice": 1000000,
+          "maxPrice": 2500000,
+          "dropChance": 1.4e-05
+        },
+        {
+          "name": "M9 Bayonet Emerald",
+          "minPrice": 1500000,
+          "maxPrice": 3500000,
+          "dropChance": 7e-06
+        },
+        {
+          "name": "AWP Dragon Lore (Souvenir)",
+          "minPrice": 5000000,
+          "maxPrice": 15000000,
+          "dropChance": 1.2e-06
+        }
+      ]
+    }
+  ]
+}
