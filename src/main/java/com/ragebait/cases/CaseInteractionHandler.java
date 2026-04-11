@@ -1,6 +1,7 @@
 package com.ragebait.cases;
 
 import com.ragebait.CasinoManager;
+import com.ragebait.util.UserCooldownManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import org.slf4j.Logger;
@@ -141,8 +142,19 @@ public class CaseInteractionHandler {
     /**
      * Lance l'animation d'ouverture de caisse a partir d'un bouton.
      * Envoie une nouvelle reponse (la vue inventaire reste inchangee).
+     *
+     * <p>Cooldown : 4 secondes entre chaque ouverture pour éviter le spam API.</p>
      */
     private void openCase(ButtonInteractionEvent event, long userId, String caseName) {
+        // Verifier le cooldown AVANT tout (avant les requêtes SQL)
+        UserCooldownManager cooldownMgr = UserCooldownManager.getInstance();
+        if (cooldownMgr.isOnCooldown(userId, UserCooldownManager.CooldownType.OPEN_CASE)) {
+            long remaining = cooldownMgr.getRemainingMs(userId, UserCooldownManager.CooldownType.OPEN_CASE);
+            event.reply("⏳ Attends encore **" + (remaining / 1000 + 1) + "s** avant d'ouvrir une autre caisse!")
+                    .setEphemeral(true).queue();
+            return;
+        }
+
         // Verifier AVANT de defer
         CaseManager cm = CaseManager.getInstance();
         Case targetCase = cm.getCase(caseName);
@@ -169,14 +181,21 @@ public class CaseInteractionHandler {
     /**
      * Initie la vente totale : remplace l'embed par la demande de confirmation.
      * Seules les armes non verrouillee sont vendues.
+     *
+     * <p>Optimisation : une seule requête SQL ({@code getWeaponInventory}) + filtre en mémoire
+     * au lieu de deux appels BDD séparés.</p>
      */
     private void initSellAll(ButtonInteractionEvent event, long userId) {
-        CaseManager cm = CaseManager.getInstance();
-        List<WeaponDrop> allWeapons      = cm.getWeaponInventory(userId);
-        List<WeaponDrop> sellableWeapons = cm.getUnlockedWeaponInventory(userId);
+        // Une seule requête SQL — filtre en mémoire (2 appels BDD → 1)
+        List<WeaponDrop> allWeapons      = CaseManager.getInstance().getWeaponInventory(userId);
+        List<WeaponDrop> sellableWeapons = new ArrayList<>();
+        int lockedCount = 0;
+        for (WeaponDrop w : allWeapons) {
+            if (w.isLocked()) lockedCount++;
+            else              sellableWeapons.add(w);
+        }
 
         if (sellableWeapons.isEmpty()) {
-            long lockedCount = allWeapons.stream().filter(WeaponDrop::isLocked).count();
             String msg = lockedCount > 0
                     ? "❌ Tu n'as aucune arme vendable ! (**" + lockedCount + "** arme(s) verrouillee(s) 🔒).\n"
                       + "Utilise `/unlock id:<n>` pour deverrouiller une arme avant de la vendre."
@@ -186,10 +205,8 @@ public class CaseInteractionHandler {
         }
 
         event.deferEdit().queue();
-        long total       = sellableWeapons.stream().mapToLong(WeaponDrop::getPrice).sum();
-        int lockedCount  = (int) allWeapons.stream().filter(WeaponDrop::isLocked).count();
+        long total = sellableWeapons.stream().mapToLong(WeaponDrop::getPrice).sum();
 
-        // Construire l'embed de confirmation en mentionnant les locked preservees
         EmbedBuilder eb = new EmbedBuilder()
                 .setColor(InventoryUI.COLOR_DANGER)
                 .setTitle("⚠️ Confirmer la vente")
@@ -209,6 +226,9 @@ public class CaseInteractionHandler {
     /**
      * Confirme la vente : vend UNIQUEMENT les armes non verrouillee.
      * Les armes locked restent dans l'inventaire.
+     *
+     * <p>Optimisation : utilise {@code removeAllWeapons()} (1 DELETE batch)
+     * au lieu d'une boucle de N DELETE individuels.</p>
      */
     private void confirmSellAll(ButtonInteractionEvent event, long userId) {
         event.deferEdit().queue();
@@ -216,22 +236,27 @@ public class CaseInteractionHandler {
         CaseManager cm = CaseManager.getInstance();
         CasinoManager casino = CasinoManager.getInstance();
 
-        List<WeaponDrop> sellable = cm.getUnlockedWeaponInventory(userId);
+        // Une seule requête SQL pour récupérer les armes vendables
+        List<WeaponDrop> allWeapons  = cm.getWeaponInventory(userId);
+        List<WeaponDrop> sellable    = new ArrayList<>();
+        for (WeaponDrop w : allWeapons) {
+            if (!w.isLocked()) sellable.add(w);
+        }
+
         if (sellable.isEmpty()) {
             showMainView(event, userId);
             return;
         }
 
-        long total = 0;
-        for (WeaponDrop w : sellable) {
-            cm.removeWeapon(w.getId(), userId);
-            total += w.getPrice();
-        }
+        // Batch DELETE : 1 requête SQL au lieu de N (une par arme)
+        List<Integer> ids = sellable.stream().map(WeaponDrop::getId).toList();
+        long total = sellable.stream().mapToLong(WeaponDrop::getPrice).sum();
+        cm.removeAllWeapons(ids, userId);
         casino.addBalance(userId, total);
         long newBalance = casino.getBalance(userId);
 
-        // Compter les armes restantes (locked)
-        int remaining = cm.getWeaponInventory(userId).size();
+        // Compter les armes restantes (locked) en mémoire (pas de requête supplémentaire)
+        int remaining = (int) allWeapons.stream().filter(WeaponDrop::isLocked).count();
 
         EmbedBuilder eb = new EmbedBuilder()
                 .setColor(InventoryUI.COLOR_SUCCESS)

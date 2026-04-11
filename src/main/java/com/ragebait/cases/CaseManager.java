@@ -116,20 +116,35 @@ public class CaseManager {
     /**
      * Retire une caisse de l'inventaire du joueur.
      *
-     * @return true si retire avec succes, false si non possedee
+     * <p>Implémentation atomique en 1 seule requête UPDATE (évite le SELECT préalable) :</p>
+     * <ol>
+     *   <li>Décrémente quantity si > 0 (avec condition AND quantity > 0 pour éviter les négatifs)</li>
+     *   <li>Supprime les lignes à 0 dans une 2ème requête (inévitable avec SQL standard)</li>
+     * </ol>
+     *
+     * @return true si retire avec succes, false si non possedee (quantity était 0)
      */
     public boolean removeFromInventory(long userId, String caseName) {
-        int current = getInventoryCount(userId, caseName);
-        if (current <= 0) return false;
-
-        String sql = current == 1
-                ? "DELETE FROM case_inventory WHERE user_id = ? AND case_name = ?"
-                : "UPDATE case_inventory SET quantity = quantity - 1 WHERE user_id = ? AND case_name = ?";
+        // UPDATE atomique : décrémente uniquement si quantity > 0 (pas de SELECT préalable)
+        String updateSql = """
+                UPDATE case_inventory
+                SET quantity = quantity - 1
+                WHERE user_id = ? AND case_name = ? AND quantity > 0
+                """;
         try (Connection conn = db().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(updateSql)) {
             ps.setLong(1, userId);
             ps.setString(2, caseName.toLowerCase());
-            ps.executeUpdate();
+            int updated = ps.executeUpdate();
+            if (updated == 0) return false; // n'existait pas ou était déjà à 0
+
+            // Nettoyer les lignes à quantity=0 (séparé car ON DELETE nécessite une vraie suppression)
+            String cleanSql = "DELETE FROM case_inventory WHERE user_id = ? AND case_name = ? AND quantity <= 0";
+            try (PreparedStatement clean = conn.prepareStatement(cleanSql)) {
+                clean.setLong(1, userId);
+                clean.setString(2, caseName.toLowerCase());
+                clean.executeUpdate();
+            }
             return true;
         } catch (SQLException e) {
             log.error("[CaseManager] Erreur removeFromInventory userId={} case={}", userId, caseName, e);
@@ -242,7 +257,7 @@ public class CaseManager {
     }
 
     /**
-     * Supprime une arme de l'inventaire (apres vente).
+     * Supprime une arme de l'inventaire (apres vente individuelle).
      * Verifie que l'arme appartient bien au joueur avant suppression.
      *
      * @return true si supprimee, false si introuvable ou non autorisee
@@ -257,6 +272,36 @@ public class CaseManager {
         } catch (SQLException e) {
             log.error("[CaseManager] Erreur removeWeapon id={} userId={}", weaponId, userId, e);
             return false;
+        }
+    }
+
+    /**
+     * Supprime plusieurs armes en une seule requête SQL (batch DELETE pour Sell All).
+     *
+     * <p>Utilise {@code id = ANY(?)} avec un tableau PostgreSQL pour éviter N requêtes DELETE :
+     * au lieu d'une boucle avec removeWeapon(), une seule requête supprime tout.</p>
+     *
+     * @param ids    liste des IDs d'armes à supprimer
+     * @param userId ID Discord du joueur (sécurité : ne supprime que ses armes)
+     * @return nombre d'armes réellement supprimées
+     */
+    public int removeAllWeapons(java.util.List<Integer> ids, long userId) {
+        if (ids == null || ids.isEmpty()) return 0;
+
+        String sql = "DELETE FROM weapon_inventory WHERE id = ANY(?) AND user_id = ?";
+        try (Connection conn = db().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            // Convertir List<Integer> en tableau SQL via createArrayOf
+            Integer[] idArray = ids.toArray(new Integer[0]);
+            java.sql.Array pgArray = conn.createArrayOf("integer", idArray);
+            ps.setArray(1, pgArray);
+            ps.setLong(2, userId);
+            int deleted = ps.executeUpdate();
+            pgArray.free();
+            return deleted;
+        } catch (SQLException e) {
+            log.error("[CaseManager] Erreur removeAllWeapons userId={} ids={}", userId, ids, e);
+            return 0;
         }
     }
 

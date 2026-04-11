@@ -1,6 +1,8 @@
 package com.ragebait.cases;
 
 import com.ragebait.CasinoManager;
+import com.ragebait.util.DiscordRateLimiter;
+import com.ragebait.util.UserCooldownManager;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import org.slf4j.Logger;
@@ -25,8 +27,8 @@ public class CaseCommandHandler {
 
     private static final Logger log = LoggerFactory.getLogger(CaseCommandHandler.class);
 
-    private static final int ANIMATION_DELAY_MS = 500;
-    private static final int ANIMATION_FRAMES   = 8;
+    private static final int ANIMATION_DELAY_MS = 700; // Délai entre frames (min 500ms pour éviter le rate limit)
+    private static final int ANIMATION_FRAMES   = 6;   // 6 frames = 7 edits total (~4.9s d'animation)
     private static final int REEL_SIZE          = 5;
 
     private final Random          random        = new Random();
@@ -116,6 +118,15 @@ public class CaseCommandHandler {
     public void handleOpenCase(InteractionHook hook, long userId, String mention, String caseName) {
         CaseManager cm = CaseManager.getInstance();
 
+        // Vérifier le cooldown AVANT de traiter (évite le spam et les race conditions)
+        UserCooldownManager cooldownMgr = UserCooldownManager.getInstance();
+        if (cooldownMgr.isOnCooldown(userId, UserCooldownManager.CooldownType.OPEN_CASE)) {
+            long remaining = cooldownMgr.getRemainingMs(userId, UserCooldownManager.CooldownType.OPEN_CASE);
+            hook.sendMessage("⏳ Attends encore **" + (remaining / 1000 + 1) + "s** avant d'ouvrir une autre caisse!")
+                    .setEphemeral(true).queue();
+            return;
+        }
+
         Case targetCase = cm.getCase(caseName);
         if (targetCase == null) {
             hook.sendMessage("❌ Caisse introuvable : **" + caseName + "**\nUtilise `/cases` pour voir les caisses.")
@@ -128,6 +139,9 @@ public class CaseCommandHandler {
                     .setEphemeral(true).queue();
             return;
         }
+
+        // Démarrer le cooldown AVANT l'animation pour bloquer le spam immédiatement
+        cooldownMgr.setCooldown(userId, UserCooldownManager.CooldownType.OPEN_CASE);
 
         // Retirer la caisse
         cm.removeFromInventory(userId, caseName);
@@ -156,20 +170,34 @@ public class CaseCommandHandler {
         Weapon[] reel = dropSystem.generateAnimationReel(
                 targetCase.getWeapons(), ANIMATION_FRAMES * REEL_SIZE + REEL_SIZE);
 
-        hook.sendMessage(buildOpeningMsg(targetCase.getName())).queue(message -> {
-            for (int frame = 0; frame < ANIMATION_FRAMES; frame++) {
-                final int f = frame;
-                scheduler.schedule(() -> {
-                    String line = buildAnimLine(reel, f * REEL_SIZE, REEL_SIZE);
-                    message.editMessage(buildAnimFrame(targetCase.getName(), line, f + 1, ANIMATION_FRAMES)).queue();
-                }, (long) (f + 1) * ANIMATION_DELAY_MS, TimeUnit.MILLISECONDS);
-            }
-            scheduler.schedule(() -> {
-                message.editMessage(
-                        buildResultMsg(mention, targetCase.getName(), dropped, floatValue, quality, finalPrice, weaponId)
-                ).queue();
-            }, (long) (ANIMATION_FRAMES + 1) * ANIMATION_DELAY_MS, TimeUnit.MILLISECONDS);
-        });
+        DiscordRateLimiter limiter = DiscordRateLimiter.getInstance();
+
+        // Premier message (frame initiale) — envoyé via le rate limiter
+        limiter.submit(() ->
+            hook.sendMessage(buildOpeningMsg(targetCase.getName())).queue(message -> {
+                // Planifier les frames d'animation avec des délais croissants
+                for (int frame = 0; frame < ANIMATION_FRAMES; frame++) {
+                    final int f = frame;
+                    scheduler.schedule(() -> {
+                        String line = buildAnimLine(reel, f * REEL_SIZE, REEL_SIZE);
+                        // Chaque edit passe par le rate limiter
+                        limiter.submit(() ->
+                            message.editMessage(
+                                buildAnimFrame(targetCase.getName(), line, f + 1, ANIMATION_FRAMES)
+                            ).queue()
+                        );
+                    }, (long) (f + 1) * ANIMATION_DELAY_MS, TimeUnit.MILLISECONDS);
+                }
+                // Frame finale : résultat
+                scheduler.schedule(() ->
+                    limiter.submit(() ->
+                        message.editMessage(
+                            buildResultMsg(mention, targetCase.getName(), dropped, floatValue, quality, finalPrice, weaponId)
+                        ).queue()
+                    )
+                , (long) (ANIMATION_FRAMES + 1) * ANIMATION_DELAY_MS, TimeUnit.MILLISECONDS);
+            })
+        );
     }
 
     // =========================================================================
