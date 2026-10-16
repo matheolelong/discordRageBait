@@ -163,7 +163,10 @@ public class Main {
                         Commands.slash("lock", "Verrouiller une arme (protege du Sell All)")
                                 .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme a verrouiller", true),
                         Commands.slash("unlock", "Deverrouiller une arme")
-                                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme a deverrouiller", true)
+                                .addOption(net.dv8tion.jda.api.interactions.commands.OptionType.INTEGER, "id", "ID de l'arme a deverrouiller", true),
+                        // Roblox
+                        Commands.slash("link", "Lie ton compte Roblox avec le code affiche dans le jeu")
+                                .addOption(OptionType.STRING, "code", "Code affiche dans le jeu Roblox", true)
                 ).queue();
                 log.info("Commandes slash enregistrÃ©es pour le serveur: {}", guild.getName());
             }

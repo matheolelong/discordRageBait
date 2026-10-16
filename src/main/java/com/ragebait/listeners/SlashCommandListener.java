@@ -10,6 +10,7 @@ import com.ragebait.StatusTrackerManager;
 import com.ragebait.cases.CaseCommandHandler;
 import com.ragebait.cases.CaseInteractionHandler;
 import com.ragebait.cases.CaseManager;
+import com.ragebait.roblox.LinkCommandHandler;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
@@ -32,6 +33,7 @@ public class SlashCommandListener extends ListenerAdapter {
 
     /** Handler pour les commandes de caisses CS:GO-like */
     private final CaseCommandHandler caseHandler = new CaseCommandHandler();
+    private final LinkCommandHandler linkHandler = new LinkCommandHandler();
 
     /** Handler pour les boutons interactifs des caisses et du shop */
     private final CaseInteractionHandler caseInteractionHandler = new CaseInteractionHandler(caseHandler);
@@ -84,6 +86,7 @@ public class SlashCommandListener extends ListenerAdapter {
             case "sell" -> handleSell(event);
             case "lock" -> handleLock(event);
             case "unlock" -> handleUnlock(event);
+            case "link" -> linkHandler.handle(event);
             default -> event.reply("Commande inconnue!").setEphemeral(true).queue();
         }
     }
