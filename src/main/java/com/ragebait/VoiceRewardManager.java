@@ -53,7 +53,7 @@ public class VoiceRewardManager {
             for (VoiceChannel channel : voiceChannels) {
                 for (Member member : channel.getMembers()) {
                     if (member.getUser().isBot()) continue;
-                    CasinoManager.getInstance().addBalance(member.getIdLong(), 10);
+                    CasinoManager.getInstance().addBalance(member.getIdLong(), 100);
                     rewarded++;
                 }
             }
